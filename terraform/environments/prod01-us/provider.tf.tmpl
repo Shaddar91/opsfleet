@@ -1,0 +1,21 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  required_version = ">= 1.10"
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/environments/${ENV}/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
