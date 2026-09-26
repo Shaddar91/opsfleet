@@ -1,14 +1,7 @@
-#----------------------------------------------------------
-#Route53 DNS Record
-#----------------------------------------------------------
-#Routing priority:
-#  1. create_global_accelerator = true → points to internal GA
-#  2. use_external_global_accelerator = true → points to external GA
-#  3. Both false → points directly to ALB
-#Set create_route53_record = false to disable (manage DNS elsewhere)
+#Route53 alias: the module's Global Accelerator if created, else the external one, else the ALB.
+#create_route53_record = false disables it (DNS managed elsewhere).
 
 locals {
-  #determine where Route53 should point
   route53_target_dns = (
     var.create_global_accelerator ? aws_globalaccelerator_accelerator.main[0].dns_name :
     var.use_external_global_accelerator ? var.external_global_accelerator_dns_name :
@@ -25,7 +18,7 @@ locals {
 module "r53_alias" {
   count = var.create_route53_record ? 1 : 0
 
-  source             = "../../r53/r53-1.2/"
+  source             = "../../r53/r53-1.2-merged/"
   alias              = true
   zone_id            = var.hosted_zone_id
   domain_name        = var.domain_name
@@ -40,10 +33,6 @@ module "r53_alias" {
     aws_lb.main
   ]
 }
-
-#----------------------------------------------------------
-#ACM Certificate
-#----------------------------------------------------------
 
 module "cert" {
   count           = var.create_certificate ? 1 : 0

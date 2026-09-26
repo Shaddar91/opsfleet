@@ -1,5 +1,5 @@
 module "alb_log_bucket" {
-  source                  = "../../s3/s3-v1.1"
+  source                  = "../../s3/s3-v1.1-merged"
   bucket                  = local.bucket
   acl                     = "log-delivery-write"
   bucket_versioning       = var.bucket_versioning
