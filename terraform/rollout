@@ -8,3 +8,4 @@ system/github
 environments/prod01-us
 environments/prod01-us/cluster
 environments/prod01-us/cluster/eks/components
+environments/prod01-us/ci

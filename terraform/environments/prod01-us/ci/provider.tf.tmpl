@@ -1,0 +1,126 @@
+provider "aws" {
+  region = var.region
+}
+
+provider "github" {
+  owner = var.github_owner
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+    github = {
+      source  = "integrations/github"
+      version = "6.13.0"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/environments/${ENV}/ci/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
+data "terraform_remote_state" "github_oidc" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/system/iam/github-oidc/github-oidc.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  github_oidc_provider_arn = data.terraform_remote_state.github_oidc.outputs.provider_arn
+}
+
+data "terraform_remote_state" "ecr_backend" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/system/ecr/backend/backend.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  ecr_repository_url  = data.terraform_remote_state.ecr_backend.outputs.repository_url
+  ecr_repository_arn  = data.terraform_remote_state.ecr_backend.outputs.repository_arn
+  ecr_repository_name = data.terraform_remote_state.ecr_backend.outputs.repository_name
+}
+
+data "terraform_remote_state" "frontend" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/environments/${ENV}/frontend/frontend.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  web_bucket_name  = data.terraform_remote_state.frontend.outputs.bucket_name
+  web_bucket_arn   = data.terraform_remote_state.frontend.outputs.bucket_arn
+  distribution_id  = data.terraform_remote_state.frontend.outputs.distribution_id
+  distribution_arn = data.terraform_remote_state.frontend.outputs.distribution_arn
+}
+
+data "terraform_remote_state" "eks" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "terraform/environments/${ENV}/cluster/eks/eks.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  cluster_name = data.terraform_remote_state.eks.outputs.cluster_name
+  cluster_arn  = data.terraform_remote_state.eks.outputs.cluster_arn
+}
+
+data "github_user" "owner" {
+  username = var.github_owner
+}
+
+data "github_repository" "repo" {
+  for_each  = toset(var.repos)
+  full_name = "${var.github_owner}/${each.key}"
+}
+
+#OIDC sub claims match case-sensitively: build them from these API values, never from var.github_owner
+locals {
+  github_owner_id = data.github_user.owner.id
+  repo_full_names = { for name, repo in data.github_repository.repo : name => repo.full_name }
+  repo_ids        = { for name, repo in data.github_repository.repo : name => repo.repo_id }
+}
