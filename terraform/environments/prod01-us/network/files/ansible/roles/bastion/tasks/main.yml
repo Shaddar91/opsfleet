@@ -1,0 +1,103 @@
+---
+- name: Assert the host architecture has a kubectl and helm build
+  ansible.builtin.assert:
+    that: ansible_architecture in bastion_arch_map
+    fail_msg: "{{ ansible_architecture }} is not a key of bastion_arch_map"
+    quiet: true
+
+- name: Install base packages
+  ansible.builtin.dnf:
+    name: "{{ bastion_packages }}"
+    state: present
+
+- name: Install the SSM agent
+  ansible.builtin.dnf:
+    name: "{{ bastion_ssm_agent_package }}"
+    state: present
+  notify: Restart the SSM agent
+
+- name: Enable and start the SSM agent
+  ansible.builtin.systemd_service:
+    name: "{{ bastion_ssm_agent_service }}"
+    enabled: true
+    state: started
+
+- name: Point dnf at the latest Amazon Linux release
+  ansible.builtin.copy:
+    content: "{{ bastion_dnf_releasever }}\n"
+    dest: /etc/dnf/vars/releasever
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure dnf-automatic to apply security updates
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/automatic.conf
+    regexp: '^{{ item.key }}\s*='
+    line: "{{ item.key }} = {{ item.value }}"
+    insertafter: '^\[commands\]'
+  loop: "{{ bastion_dnf_automatic_commands | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Enable and start the dnf-automatic timer
+  ansible.builtin.systemd_service:
+    name: "{{ bastion_dnf_automatic_timer }}"
+    enabled: true
+    state: started
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "{{ bastion_kubectl_url }}"
+    checksum: "sha256:{{ bastion_kubectl_sha256[bastion_arch] }}"
+    dest: "{{ bastion_bin_dir }}/kubectl"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the helm directory
+  ansible.builtin.file:
+    path: "{{ bastion_helm_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download helm
+  ansible.builtin.get_url:
+    url: "{{ bastion_helm_url }}"
+    checksum: "sha256:{{ bastion_helm_sha256[bastion_arch] }}"
+    dest: "{{ bastion_helm_dir }}/helm.tar.gz"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Unpack helm
+  ansible.builtin.unarchive:
+    src: "{{ bastion_helm_dir }}/helm.tar.gz"
+    dest: "{{ bastion_helm_dir }}"
+    remote_src: true
+    creates: "{{ bastion_helm_dir }}/linux-{{ bastion_arch }}/helm"
+
+- name: Install helm
+  ansible.builtin.copy:
+    src: "{{ bastion_helm_dir }}/linux-{{ bastion_arch }}/helm"
+    dest: "{{ bastion_bin_dir }}/helm"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Check kubectl runs at the pinned version
+  ansible.builtin.command:
+    cmd: "{{ bastion_bin_dir }}/kubectl version --client"
+  register: bastion_kubectl_check
+  changed_when: false
+  failed_when: bastion_kubectl_check.rc != 0 or bastion_kubectl_version not in bastion_kubectl_check.stdout
+
+- name: Check helm runs at the pinned version
+  ansible.builtin.command:
+    cmd: "{{ bastion_bin_dir }}/helm version --short"
+  register: bastion_helm_check
+  changed_when: false
+  failed_when: bastion_helm_check.rc != 0 or bastion_helm_version not in bastion_helm_check.stdout

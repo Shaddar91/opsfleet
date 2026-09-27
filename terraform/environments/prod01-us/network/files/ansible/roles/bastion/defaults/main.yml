@@ -1,0 +1,41 @@
+---
+bastion_arch_map:
+  aarch64: arm64
+  x86_64: amd64
+bastion_arch: "{{ bastion_arch_map[ansible_architecture] }}"
+
+bastion_packages:
+  - awscli-2
+  - bash-completion
+  - bind-utils
+  - dnf-automatic
+  - git
+  - gzip
+  - jq
+  - nmap-ncat
+  - tar
+  - tmux
+  - unzip
+bastion_ssm_agent_package: amazon-ssm-agent
+bastion_ssm_agent_service: amazon-ssm-agent
+
+bastion_dnf_releasever: latest
+bastion_dnf_automatic_commands:
+  upgrade_type: security
+  apply_updates: "yes"
+bastion_dnf_automatic_timer: dnf-automatic.timer
+
+bastion_bin_dir: /usr/local/bin
+
+bastion_kubectl_version: v1.36.5
+bastion_kubectl_url: "https://dl.k8s.io/release/{{ bastion_kubectl_version }}/bin/linux/{{ bastion_arch }}/kubectl"
+bastion_kubectl_sha256:
+  amd64: 33bc88a24c3b09cf55bfd59e6ca977881b61fc3f25ab65bc80c65b430248648e
+  arm64: 88fc1aca8fd0c1b44fe379f67c39bd6858bdfc50241dc55775f84d0f5b31da3a
+
+bastion_helm_version: v4.3.0
+bastion_helm_url: "https://get.helm.sh/helm-{{ bastion_helm_version }}-linux-{{ bastion_arch }}.tar.gz"
+bastion_helm_sha256:
+  amd64: 86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb
+  arm64: 31c5794dd55c66a51e6b7d2e2ac7a114ae8b1de41ff1d9ba51748ac973b06a08
+bastion_helm_dir: "/opt/bastion-tools/helm-{{ bastion_helm_version }}"
