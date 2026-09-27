@@ -16,3 +16,5 @@ data "aws_ec2_instance_type" "bastion" {
 data "aws_ssm_parameter" "bastion_ami" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-${local.bastion_arch}"
 }
+
+data "aws_partition" "current" {}

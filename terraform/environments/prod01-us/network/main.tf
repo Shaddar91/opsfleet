@@ -56,4 +56,13 @@ module "network" {
   bastion_ami   = data.aws_ssm_parameter.bastion_ami.insecure_value
   ssh_key       = local.ssh_key_name
   rules_cidr    = local.bastion_rules
+
+  bastion_iam_instance_profile = module.bastion_role.instance_profile[0].name
+  bastion_user_data = templatefile("${path.module}/files/setup_script.sh", {
+    ansible_bucket = local.ansible_bucket_name
+    roles_key      = aws_s3_object.bastion_roles.key
+    playbook_key   = aws_s3_object.bastion_playbook.key
+    aws_region     = var.region
+    ansible_rev    = sha256(join("", [data.archive_file.bastion_roles.output_sha256, filesha256(local.bastion_playbook)]))
+  })
 }
