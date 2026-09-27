@@ -1,0 +1,8 @@
+{
+  "source": [
+    "aws.health"
+  ],
+  "detail-type": [
+    "AWS Health Event"
+  ]
+}

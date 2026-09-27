@@ -1,5 +1,6 @@
 #deploy order: one stack folder per line, relative to this tier
 namespaces
+karpenter-aws
 aws-ebs-csi
 metrics-server
 aws-load-balancer-controller
