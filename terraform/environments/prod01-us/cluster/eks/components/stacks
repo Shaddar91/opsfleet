@@ -2,3 +2,4 @@
 namespaces
 aws-ebs-csi
 metrics-server
+aws-load-balancer-controller
