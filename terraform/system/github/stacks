@@ -1,1 +1,4 @@
 #deploy order: one stack folder per line, relative to this tier
+of-web
+of-api
+of-helm
