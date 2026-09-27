@@ -1,3 +1,8 @@
 #tier deploy order; later plans insert their tiers
+system/s3
+system/r53
+system/iam
 system
+system/ecr
+system/github
 environments/prod01-us
