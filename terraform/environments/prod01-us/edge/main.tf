@@ -33,5 +33,6 @@ module "alb" {
 
   bucket_versioning        = "Disabled"
   expire_days              = var.log_expire_days
+  log_bucket_name          = var.edge_log_bucket_name
   log_bucket_force_destroy = var.log_bucket_force_destroy
 }

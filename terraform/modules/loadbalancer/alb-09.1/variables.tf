@@ -201,6 +201,11 @@ variable "restrict_public_buckets" {
   description = "Whether Amazon S3 should restrict public bucket policies for this bucket."
 }
 
+variable "log_bucket_name" {
+  type        = string
+  description = "Name of the access and WAF log bucket. S3 names are global, so the caller passes a site value"
+}
+
 variable "log_bucket_force_destroy" {
   type        = bool
   default     = false
