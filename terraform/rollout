@@ -6,3 +6,4 @@ system
 system/ecr
 system/github
 environments/prod01-us
+environments/prod01-us/cluster
