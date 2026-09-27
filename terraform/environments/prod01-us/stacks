@@ -1,3 +1,4 @@
 #deploy order: one stack folder per line, relative to this tier
 network
 edge
+global-accelerator
