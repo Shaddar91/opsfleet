@@ -1,2 +1,3 @@
 #deploy order: one stack folder per line, relative to this tier
 state-bucket
+ansible-bucket

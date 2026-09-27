@@ -1,0 +1,58 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": [
+            "s3:ListBucket",
+            "s3:GetReplicationConfiguration",
+            "s3:GetObjectVersionForReplication",
+            "s3:GetObjectVersionAcl",
+            "s3:GetObjectVersionTagging",
+            "s3:GetObjectRetention",
+            "s3:GetObjectLegalHold"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+            "${source_bucket}",
+            "${source_bucket}/*",
+            "${destination_bucket}",
+            "${destination_bucket}/*"
+        ]
+    },
+    {
+        "Action": [
+            "s3:ReplicateObject",
+            "s3:ReplicateDelete",
+            "s3:ReplicateTags",
+            "s3:ObjectOwnerOverrideToBucketOwner"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+            "${source_bucket}/*",
+            "${destination_bucket}/*"
+        ]
+      },
+      {
+        "Action": "kms:Decrypt",
+			  "Effect": "Allow",
+			  "Resource": "${source_kms}",
+			  "Condition": {
+				  "StringLike": {
+					  "kms:ViaService": "s3.${source_region}.amazonaws.com",
+					  "kms:EncryptionContext:aws:s3:arn": ["${source_bucket}/*"]
+				  }
+			  }
+      },
+		  {
+			  "Action": "kms:Encrypt",
+			  "Effect": "Allow",
+			  "Resource": "${destination_kms}",
+			  "Condition": {
+				  "StringLike": {
+					  "kms:ViaService": "s3.${destination_region}.amazonaws.com",
+					  "kms:EncryptionContext:aws:s3:arn": ["${destination_bucket}/*"]
+				  }
+			  }
+		  }
+    ]
+}
