@@ -30,6 +30,11 @@ variable "region" {
   default = "${REGION}"
 }
 
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
 data "terraform_remote_state" "ansible_bucket" {
   backend = "s3"
   config = {
