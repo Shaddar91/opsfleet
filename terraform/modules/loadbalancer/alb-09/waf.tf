@@ -1,8 +1,3 @@
-#----------------------------------------------------------
-#WAF Resources
-#Only created when enable_waf = true
-#----------------------------------------------------------
-
 resource "aws_wafv2_web_acl_association" "main" {
   count        = var.enable_waf ? 1 : 0
   resource_arn = aws_lb.main.arn
@@ -67,10 +62,6 @@ resource "aws_wafv2_web_acl" "main" {
     allow {}
   }
 
-  #----------------------------------------------------------
-  #Priority 1: Whitelist - ALLOW these IPs (bypass all other rules)
-  #Only created when enable_waf_whitelist = true AND waf_whitelisted_ips is not empty
-  #----------------------------------------------------------
   dynamic "rule" {
     for_each = var.enable_waf_whitelist && length(var.waf_whitelisted_ips) > 0 ? [1] : []
     content {
@@ -95,10 +86,6 @@ resource "aws_wafv2_web_acl" "main" {
     }
   }
 
-  #----------------------------------------------------------
-  #Priority 0: Path-based ALLOW - bypass all WAF rules for these paths
-  #Single path uses byte_match directly, multiple paths use or_statement
-  #----------------------------------------------------------
   dynamic "rule" {
     for_each = length(var.waf_allowed_paths) == 1 ? [1] : []
     content {

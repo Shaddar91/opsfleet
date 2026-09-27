@@ -20,12 +20,6 @@ module "alb_log_bucket" {
   expire_after   = var.expire_days
 }
 
-
-#----------------------------------------------------------
-#WAF Kinesis Firehose Delivery Stream
-#Only created when enable_waf = true
-#----------------------------------------------------------
-
 resource "aws_kinesis_firehose_delivery_stream" "main" {
   count       = var.enable_waf ? 1 : 0
   name        = "aws-waf-logs-${var.environment}-${var.application}"

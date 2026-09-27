@@ -1,10 +1,3 @@
-//=============================================================================
-// Transit Gateway VPC Attachment
-//=============================================================================
-// Phase 1: Enable TGW attachment (safe, no traffic impact)
-// Creates ENIs in specified subnets and attaches VPC to Transit Gateway
-// Traffic continues to use NAT until enable_tgw_routing is set to true
-
 resource "aws_ec2_transit_gateway_vpc_attachment" "main" {
   count = var.enable_tgw_attachment ? 1 : 0
 

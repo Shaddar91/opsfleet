@@ -1,4 +1,3 @@
-# Public Subnets
 resource "aws_subnet" "bastion" {
   count             = length(var.bastion_subnets)
   vpc_id            = aws_vpc.main.id
@@ -16,7 +15,6 @@ resource "aws_route_table_association" "bastion" {
   route_table_id = aws_route_table.public.id
 }
 
-# Public Subnets
 resource "aws_subnet" "public" {
   count                   = length(var.public_subnets)
   vpc_id                  = aws_vpc.main.id
@@ -35,7 +33,6 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private Subnets
 resource "aws_subnet" "private" {
   count             = length(var.private_subnets)
   vpc_id            = aws_vpc.main.id
@@ -53,7 +50,6 @@ resource "aws_route_table_association" "nat" {
   route_table_id = aws_route_table.nat.id
 }
 
-# Internal Subnets
 resource "aws_subnet" "internal" {
   count             = length(var.internal_subnets)
   vpc_id            = aws_vpc.main.id
@@ -71,7 +67,6 @@ resource "aws_route_table_association" "internal" {
   route_table_id = aws_route_table.internal.id
 }
 
-# Lambda Subnets
 resource "aws_subnet" "lambda" {
   count             = length(var.lambda_subnets)
   vpc_id            = aws_vpc.main.id

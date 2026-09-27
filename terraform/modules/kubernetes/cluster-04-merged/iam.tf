@@ -6,7 +6,6 @@ module "cluster_role" {
   policy_list = concat(var.default_cluster_role_policy_list, var.extra_cluster_policy_list)
 }
 
-#IAM node role
 module "ec2_role" {
   source        = "../../iam/role/"
   environment   = var.environment

@@ -1,7 +1,3 @@
-#----------------------------------------------------------
-#ALB Outputs
-#----------------------------------------------------------
-
 output "alb" {
   description = "The ALB resource"
   value       = aws_lb.main
@@ -27,10 +23,6 @@ output "alb_zone_id" {
   value       = aws_lb.main.zone_id
 }
 
-#----------------------------------------------------------
-#Listener Outputs
-#----------------------------------------------------------
-
 output "http_listener" {
   description = "HTTP listener (redirects to HTTPS)"
   value       = var.accept_http ? aws_lb_listener.http[0] : null
@@ -51,10 +43,6 @@ output "https_listener_arn" {
   value       = aws_lb_listener.https.arn
 }
 
-#----------------------------------------------------------
-#Security Group Outputs
-#----------------------------------------------------------
-
 output "sg" {
   description = "ALB security group"
   value       = module.alb_sg.sg
@@ -65,10 +53,6 @@ output "sg_id" {
   value       = module.alb_sg.sg.id
 }
 
-#----------------------------------------------------------
-#S3 Logging Outputs
-#----------------------------------------------------------
-
 output "log_bucket" {
   description = "S3 bucket for ALB logs"
   value       = module.alb_log_bucket.s3
@@ -78,10 +62,6 @@ output "log_bucket_name" {
   description = "Name of S3 bucket for ALB logs"
   value       = module.alb_log_bucket.s3.bucket
 }
-
-#----------------------------------------------------------
-#WAF Outputs
-#----------------------------------------------------------
 
 output "waf_enabled" {
   description = "Whether WAF is enabled"
@@ -98,18 +78,10 @@ output "waf_web_acl_id" {
   value       = var.enable_waf ? aws_wafv2_web_acl.main[0].id : null
 }
 
-#----------------------------------------------------------
-#Certificate Outputs
-#----------------------------------------------------------
-
 output "certificate_arn" {
   description = "ARN of the ACM certificate (null if using existing certificate)"
   value       = length(module.cert) > 0 ? module.cert[0].arn : var.certificate_arn
 }
-
-#----------------------------------------------------------
-#Global Accelerator Outputs
-#----------------------------------------------------------
 
 output "global_accelerator_created" {
   description = "Whether Global Accelerator was created in this module"
@@ -146,10 +118,6 @@ output "global_accelerator_endpoint_group_arn" {
   value       = var.create_global_accelerator ? aws_globalaccelerator_endpoint_group.main[0].id : null
 }
 
-#----------------------------------------------------------
-#Configuration Info
-#----------------------------------------------------------
-
 output "is_internal" {
   description = "Whether the ALB is internal (private)"
   value       = var.internal
@@ -164,10 +132,6 @@ output "using_external_global_accelerator" {
   description = "Whether Route53 points to external Global Accelerator"
   value       = var.use_external_global_accelerator
 }
-
-#----------------------------------------------------------
-#Route53 Target Info (useful for debugging/external management)
-#----------------------------------------------------------
 
 output "route53_target_dns" {
   description = "The DNS name that Route53 points to (GA or ALB depending on config)"

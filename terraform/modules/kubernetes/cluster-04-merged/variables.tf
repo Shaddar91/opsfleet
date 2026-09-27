@@ -96,14 +96,12 @@ variable "rules_sg" {
 variable "node_policy_file_location" {
   description = "Path to the node policy JSON file for the EC2 role."
   type        = string
-  # Note: Using an interpolation (like ${path.module}) in a default is not allowed because defaults must be constant.
-  # Instead, either pass this in from your root module or set it via a local.
 }
 
 variable "node_policy_template_vars" {
   description = "Map of values to template into the node policy JSON file."
   type        = map(string)
-  default     = {}  // You can override this in the module call if needed.
+  default     = {}
 }
 variable "extra_cluster_policy_list" {
   type = list(string)

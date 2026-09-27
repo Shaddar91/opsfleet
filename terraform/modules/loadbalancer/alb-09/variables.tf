@@ -18,13 +18,6 @@ variable "subnet_ids" {
   description = "List of subnet IDs for the ALB"
 }
 
-#----------------------------------------------------------
-#Global Accelerator Configuration
-#----------------------------------------------------------
-#Option 1: Create GA in this module (all-in-one)
-#Option 2: Use external GA (created in separate module)
-#Option 3: No GA (traffic direct to ALB)
-
 variable "create_global_accelerator" {
   type        = bool
   default     = false
@@ -55,19 +48,12 @@ variable "external_global_accelerator_zone_id" {
   description = "Hosted zone ID of external Global Accelerator. Required when use_external_global_accelerator=true."
 }
 
-#----------------------------------------------------------
-#Route53 Configuration
-#----------------------------------------------------------
-
 variable "create_route53_record" {
   type        = bool
   default     = true
   description = "Create Route53 record in this module. Set to false if DNS is managed elsewhere."
 }
 
-#----------------------------------------------------------
-#WAF Configuration
-#----------------------------------------------------------
 variable "enable_waf" {
   type        = bool
   default     = false
@@ -131,9 +117,6 @@ variable "waf_allowed_paths" {
   description = "List of URI path prefixes to allow through WAF without inspection. Uses STARTS_WITH matching (e.g., [\"/saml/\"] matches /saml/tenant, etc.)"
 }
 
-#----------------------------------------------------------
-#ALB Visibility Configuration
-#----------------------------------------------------------
 variable "internal" {
   type        = bool
   default     = false
@@ -160,9 +143,6 @@ variable "rules_cidr" {
   description = "Security group rules for the ALB"
 }
 
-#----------------------------------------------------------
-#Certificate Configuration
-#----------------------------------------------------------
 variable "create_certificate" {
   type        = bool
   default     = true
@@ -180,9 +160,6 @@ variable "ssl_policy" {
   default = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 }
 
-#----------------------------------------------------------
-#Logging Configuration
-#----------------------------------------------------------
 variable "access_logs_prefix" {
   type    = string
   default = "logs"
@@ -242,9 +219,6 @@ variable "domain_name" {
   description = "Domain name for the ALB (used for certificate and DNS)"
 }
 
-#----------------------------------------------------------
-#Health Check Configuration
-#----------------------------------------------------------
 variable "health_check_path" {
   type        = string
   default     = "/"

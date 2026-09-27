@@ -20,7 +20,6 @@ resource "aws_route_table" "nat" {
   }
 }
 
-// Route via NAT Gateway (default, traditional approach)
 resource "aws_route" "nat" {
   count = var.create_nat_gateway && !var.enable_tgw_routing ? 1 : 0
 
@@ -29,8 +28,6 @@ resource "aws_route" "nat" {
   nat_gateway_id         = aws_nat_gateway.main[0].id
 }
 
-// Route via Transit Gateway (centralized egress)
-// Phase 2: Enable this after TGW attachment is confirmed working
 resource "aws_route" "tgw" {
   count = var.enable_tgw_routing ? 1 : 0
 

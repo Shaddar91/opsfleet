@@ -17,7 +17,6 @@ resource "aws_eks_node_group" "main" {
 
   ami_type   = try(each.value.ami_type, null)
   version    = try(each.value.node_version, null)
-  # image_id   = try(each.value.image_id, null)
   labels     = try(each.value.labels, null)
   tags       = merge({
     "k8s.io/cluster-autoscaler/enabled"               = "true"

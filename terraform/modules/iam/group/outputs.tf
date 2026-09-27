@@ -3,7 +3,6 @@ output "name" {
   description = "The name of the IAM group"
 }
 
-#group_name — alias of `name`, exposed for callers that prefer the more explicit identifier.
 output "group_name" {
   value       = aws_iam_group.main.name
   description = "The name of the IAM group (alias of `name`)"

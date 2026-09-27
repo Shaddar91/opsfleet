@@ -174,10 +174,6 @@ variable "ec2_endpoint_allowed_sg_ids" {
   description = "Security group IDs allowed to reach the EC2 interface endpoint on 443"
 }
 
-//=============================================================================
-// Transit Gateway Variables
-//=============================================================================
-
 variable "enable_tgw_attachment" {
   type        = bool
   default     = false

@@ -1,8 +1,3 @@
-#----------------------------------------------------------
-#Global Accelerator Resources
-#Only created when create_global_accelerator = true
-#----------------------------------------------------------
-
 resource "aws_globalaccelerator_accelerator" "main" {
   count   = var.create_global_accelerator ? 1 : 0
   enabled = var.ga_enabled_on_aws_level

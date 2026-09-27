@@ -110,10 +110,6 @@ output "ec2_endpoint_sg_id" {
   value       = var.enable_ec2_endpoint ? module.ec2_endpoint_sg[0].sg_id : null
 }
 
-//=============================================================================
-// Transit Gateway Outputs
-//=============================================================================
-
 output "tgw_attachment_id" {
   description = "Transit Gateway VPC Attachment ID (null if not enabled)"
   value       = var.enable_tgw_attachment ? aws_ec2_transit_gateway_vpc_attachment.main[0].id : null

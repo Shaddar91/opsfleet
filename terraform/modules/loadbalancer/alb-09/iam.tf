@@ -1,8 +1,3 @@
-#----------------------------------------------------------
-#WAF Firehose IAM Role
-#Only created when enable_waf = true
-#----------------------------------------------------------
-
 module "firehose_role" {
   count         = var.enable_waf ? 1 : 0
   source        = "../../iam/role"
