@@ -8,7 +8,6 @@ create_security_group_rule = true
 namespace                  = "example-api"
 architecture               = "amd64"
 argocd_namespace           = "argocd"
-github_owner               = "CHANGEME"
 git_repository             = "of-helm"
 git_branch                 = "master"
 git_path                   = "charts/example-api"
