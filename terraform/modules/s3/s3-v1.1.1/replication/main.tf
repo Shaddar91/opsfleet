@@ -1,34 +1,18 @@
-data "aws_kms_key" "source" {
-  count  = var.source_kms == null ? 1 : 0
-  key_id = "alias/aws/s3"
-}
-
-data "aws_kms_key" "replica" {
-  provider = aws.replica
-  key_id   = "alias/aws/s3"
-}
-
-locals {
-  replica_bucket = coalesce(var.replica_bucket, "${var.bucket}-replica")
-  source_kms     = var.source_kms != null ? var.source_kms : data.aws_kms_key.source[0].arn
-  source_region  = split(":", local.source_kms)[3]
-  replica_region = split(":", data.aws_kms_key.replica.arn)[3]
-}
-
 module "s3_replication_role" {
   source        = "../../../iam/role"
-  aws_service   = "s3.amazonaws.com"
-  name          = var.bucket
   custom_policy = true
+
+  aws_service = "s3.amazonaws.com"
+  name        = var.bucket
   policy_file = templatefile(
     "${path.module}/files/replication_policy.json",
     {
-      source_bucket      = var.bucket_arn
-      destination_bucket = aws_s3_bucket.replica.arn
-      source_region      = local.source_region
-      destination_region = local.replica_region
-      source_kms         = local.source_kms
-      destination_kms    = data.aws_kms_key.replica.arn
+      SOURCE_BUCKET      = var.bucket_arn
+      DESTINATION_BUCKET = aws_s3_bucket.replica.arn
+      SOURCE_REGION      = local.source_region
+      DESTINATION_REGION = local.replica_region
+      SOURCE_KMS         = local.source_kms
+      DESTINATION_KMS    = data.aws_kms_key.replica.arn
     }
   )
 }
@@ -86,7 +70,7 @@ resource "aws_s3_bucket_policy" "replica" {
   bucket   = aws_s3_bucket.replica.id
   policy = templatefile(
     "${path.module}/../files/bucket_policy.json",
-    { bucket = local.replica_bucket }
+    { BUCKET = local.replica_bucket }
   )
   depends_on = [aws_s3_bucket_public_access_block.replica]
 }

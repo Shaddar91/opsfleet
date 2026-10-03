@@ -1,0 +1,14 @@
+application       = "of-load"
+subdomain         = "load"
+container_port    = 8000
+health_check_path = "/healthz"
+priority          = 20
+namespace         = "of-load"
+architecture      = "arm64"
+argocd_namespace  = "argocd"
+argocd_project    = "opsfleet"
+git_repository    = "of-helm"
+git_branch        = "master"
+git_path          = "charts/of-load"
+commit_author     = "CHANGEME"
+commit_email      = "CHANGEME"

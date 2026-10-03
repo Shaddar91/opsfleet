@@ -176,7 +176,7 @@ variable "ssl_support_method" {
 }
 
 variable "aliases" {
-  type  = list(string)
+  type = list(string)
 }
 
 variable "enable_api_origin" {

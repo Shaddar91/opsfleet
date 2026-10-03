@@ -1,0 +1,337 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="current-organization" name="Current state: organization">
+    <mxGraphModel dx="2200" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Current state: one AWS account" style="text;html=1;align=left;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="290" y="14" width="1420" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Every environment and every shared service in one account. Small text names the Terraform stack (path under terraform/) that creates each part." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#545B64;" vertex="1" parent="1">
+          <mxGeometry x="290" y="46" width="1420" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="acct" value="AWS account (standalone, no AWS Organization)" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_account;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=14;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#CD2264;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#CD2264;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="290" y="90" width="1420" height="1174" as="geometry" />
+        </mxCell>
+        <mxCell id="glob" value="Global services" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F4F6F8;strokeColor=#AAB7B8;fontColor=#232F3E;fontSize=13;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;container=1;collapsible=0;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="40" width="1380" height="356" as="geometry" />
+        </mxCell>
+        <mxCell id="ga" value="&lt;b&gt;Global Accelerator&lt;/b&gt;&lt;br&gt;Static anycast IPs on TCP 80 and 443. Each region's edge stack attaches its public ALB as an endpoint group. Holds the A alias record of the app hostname.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;global/global-accelerator&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=58;spacingRight=6;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="glob">
+          <mxGeometry x="16" y="34" width="420" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="ga_icon" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.global_accelerator;" vertex="1" parent="ga">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fe" value="&lt;b&gt;Frontend&lt;/b&gt;, deployed by name&lt;br&gt;CloudFront with WAF and an ACM certificate, in front of the S3 web bucket. Lambda@Edge stamps the origin secret and sets the security headers. Access logs go to a log bucket. Route 53 aliases for the web hostname and the zone apex. The of-web deploy role, its GitHub Actions secrets and workflow.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;global/frontend; runs only by name: ./tfctl.sh global apply frontend&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=58;spacingRight=6;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="glob">
+          <mxGeometry x="16" y="180" width="420" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="fe_cf" value="CloudFront" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;" vertex="1" parent="fe">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r53" value="&lt;b&gt;Route 53&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/r53/opsfleet&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=58;spacingRight=6;spacingTop=14;container=1;collapsible=0;" vertex="1" parent="glob">
+          <mxGeometry x="452" y="34" width="440" height="306" as="geometry" />
+        </mxCell>
+        <mxCell id="r53_icon" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.route_53;" vertex="1" parent="r53">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z_parent" value="&lt;b&gt;Parent zone&lt;/b&gt;&lt;br&gt;innovate.example, already in the account" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F2EBFF;strokeColor=#8C4FFF;fontColor=#232F3E;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="r53">
+          <mxGeometry x="110" y="80" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="z_public" value="&lt;b&gt;Public zone&lt;/b&gt;&lt;br&gt;prod.innovate.example&lt;br&gt;public names" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F2EBFF;strokeColor=#8C4FFF;fontColor=#232F3E;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="r53">
+          <mxGeometry x="14" y="212" width="200" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="z_internal" value="&lt;b&gt;Internal zone&lt;/b&gt;&lt;br&gt;internal-prod.innovate.example&lt;br&gt;internal names" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F2EBFF;strokeColor=#8C4FFF;fontColor=#232F3E;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="r53">
+          <mxGeometry x="226" y="212" width="200" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="iam" value="&lt;b&gt;IAM&lt;/b&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=58;spacingRight=6;spacingTop=20;container=1;collapsible=0;" vertex="1" parent="glob">
+          <mxGeometry x="908" y="34" width="456" height="306" as="geometry" />
+        </mxCell>
+        <mxCell id="iam_icon" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.identity_and_access_management;" vertex="1" parent="iam">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="iam_group" value="&lt;b&gt;IAM group prod01-us-developers&lt;/b&gt;: ReadOnlyAccess; denies the state bucket, S3 access points, secret values and KMS decrypt through SSM or Secrets Manager; allows sts:AssumeRole on the deploy role. Members: &amp;lt;developer&amp;gt; IAM users.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/access/developers&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DD344C;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;spacingTop=2;" vertex="1" parent="iam">
+          <mxGeometry x="12" y="62" width="432" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="iam_deploy" value="&lt;b&gt;Deploy role prod01-us-developers-deploy-role&lt;/b&gt;: trusts the account root; allows eks:DescribeCluster. Its EKS access entry grants AmazonEKSEditPolicy in namespace of.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/access/developers&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DD344C;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;spacingTop=2;" vertex="1" parent="iam">
+          <mxGeometry x="12" y="142" width="432" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="iam_oidc" value="&lt;b&gt;GitHub OIDC provider&lt;/b&gt;, trusted by the CI roles&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/iam/github-oidc&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DD344C;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;spacingTop=2;" vertex="1" parent="iam">
+          <mxGeometry x="12" y="206" width="432" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="iam_tfci" value="&lt;b&gt;terraform-ci&lt;/b&gt;: plan role (ReadOnlyAccess, default branch) and apply role (AdministratorAccess, approval environment only) for this repository&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/iam/terraform-ci&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DD344C;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;spacingTop=2;" vertex="1" parent="iam">
+          <mxGeometry x="12" y="250" width="432" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" value="us-east-1" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=0;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="412" width="1380" height="580" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_roles" value="&lt;b&gt;CI roles&lt;/b&gt;&lt;br&gt;Roles for of-api and of-helm, one per repository, trusted through GitHub OIDC; EKS edit access in one namespace for each repository whose CI deploys to the cluster&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/ci/roles&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;spacingTop=2;" vertex="1" parent="r1">
+          <mxGeometry x="16" y="40" width="240" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_gha" value="&lt;b&gt;GitHub Actions settings&lt;/b&gt;: the AWS_ROLE_ARN secret, secrets and variables per repository&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/ci/github-actions&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;spacingTop=2;" vertex="1" parent="r1">
+          <mxGeometry x="16" y="132" width="240" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr" value="&lt;b&gt;ECR&lt;/b&gt;&lt;br&gt;of-api, plus its OIDC push role and Actions workflow&lt;br&gt;of-load, the same&lt;br&gt;frontend-web&lt;br&gt;helm-charts/of-api (OCI chart)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/ecr&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=58;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="r1">
+          <mxGeometry x="16" y="210" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr_icon" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;" vertex="1" parent="ecr">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="key" value="&lt;b&gt;Bastion key pair&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/ssh-key&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;spacingTop=6;" vertex="1" parent="r1">
+          <mxGeometry x="16" y="354" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;S3 buckets&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/s3&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;spacingTop=4;container=1;collapsible=0;" vertex="1" parent="r1">
+          <mxGeometry x="16" y="418" width="240" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_art_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" vertex="1" parent="s3">
+          <mxGeometry x="10" y="44" width="25" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_art_t" value="&lt;b&gt;artifact-bucket&lt;/b&gt;: of-web builds from CI" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=10;fontColor=#232F3E;" vertex="1" parent="s3">
+          <mxGeometry x="42" y="40" width="192" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_ans_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" vertex="1" parent="s3">
+          <mxGeometry x="10" y="78" width="25" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_ans_t" value="&lt;b&gt;ansible-bucket&lt;/b&gt;: roles and playbook for instance user-data" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=10;fontColor=#232F3E;" vertex="1" parent="s3">
+          <mxGeometry x="42" y="74" width="192" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_bak_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" vertex="1" parent="s3">
+          <mxGeometry x="10" y="112" width="25" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_bak_t" value="&lt;b&gt;backup-bucket&lt;/b&gt;: versioned, replicated to us-west-2" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=10;fontColor=#232F3E;" vertex="1" parent="s3">
+          <mxGeometry x="42" y="108" width="192" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="vpc" value="&lt;b&gt;VPC 10.144.0.0/16 over three AZs&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/network&lt;/font&gt;" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc2;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#8C4FFF;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#6B40C4;dashed=0;" vertex="1" parent="r1">
+          <mxGeometry x="288" y="40" width="772" height="524" as="geometry" />
+        </mxCell>
+        <mxCell id="alb_pub" value="&lt;b&gt;Public ALB&lt;/b&gt;&lt;br&gt;ACM certificate, HTTP to HTTPS redirect, WAF, access logs; endpoint group of the accelerator&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/edge&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=56;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="vpc">
+          <mxGeometry x="16" y="44" width="240" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="alb_pub_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.application_load_balancer;" vertex="1" parent="alb_pub">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="alb_int" value="&lt;b&gt;Internal ALB&lt;/b&gt;&lt;br&gt;Private subnets; HTTP listener with a 404 default; ip target group for in-cluster ingress&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/internal-alb&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=56;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="vpc">
+          <mxGeometry x="266" y="44" width="240" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="alb_int_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.application_load_balancer;" vertex="1" parent="alb_int">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bastion" value="&lt;b&gt;Bastion&lt;/b&gt;&lt;br&gt;Graviton Spot instance (t4g.small); Ansible runs at boot from the ansible bucket; key pair from system/ssh-key&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/network&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=56;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="vpc">
+          <mxGeometry x="516" y="44" width="240" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="bastion_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;" vertex="1" parent="bastion">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="eks" value="&lt;b&gt;EKS prod01-us-eks&lt;/b&gt;&lt;br&gt;Private subnets. Public endpoint open only to the Terraform runner's IP; the runner is cluster admin. One Graviton and one x86 Spot node group; a node access entry for Karpenter.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/cluster/eks&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=62;spacingRight=6;spacingTop=8;container=1;collapsible=0;" vertex="1" parent="vpc">
+          <mxGeometry x="16" y="176" width="490" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="eks_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="eks">
+          <mxGeometry x="8" y="10" width="44" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="app" value="&lt;b&gt;example-api&lt;/b&gt;, &lt;b&gt;of-load&lt;/b&gt;&lt;br&gt;Sample service (service-0.3) and stress service (service-0.4), each with a Helm chart and an Argo CD Application&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/app-services: example-api, of-load&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingRight=4;spacingTop=6;" vertex="1" parent="vpc">
+          <mxGeometry x="516" y="176" width="240" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="aurora" value="&lt;b&gt;Aurora PostgreSQL: in code, kept out of the rollout&lt;/b&gt;&lt;br&gt;Internal subnets; global database primary; the master password goes to a Secrets Manager secret. Not built yet.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/aurora&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=56;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="vpc">
+          <mxGeometry x="516" y="284" width="240" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="aurora_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.aurora;opacity=60;" vertex="1" parent="aurora">
+          <mxGeometry x="8" y="10" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subnets" value="Subnet tiers over three AZs: public, private, bastion and internal; its own NAT gateway." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F2EBFF;strokeColor=none;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=10;" vertex="1" parent="vpc">
+          <mxGeometry x="16" y="430" width="740" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="comp" value="&lt;b&gt;Cluster components&lt;/b&gt;, in deploy order&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/cluster/eks/components&lt;/font&gt;" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#FFF8F0;strokeColor=#ED7100;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingRight=4;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="r1">
+          <mxGeometry x="1076" y="40" width="288" height="524" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" value="&lt;b&gt;namespaces&lt;/b&gt;: ingress, of, monitoring" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="50" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;karpenter-aws&lt;/b&gt;: interruption queue and EventBridge rules" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="92" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="&lt;b&gt;karpenter&lt;/b&gt;: CRDs and controller" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="134" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;aws-ebs-csi&lt;/b&gt;: EBS CSI driver add-on" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="176" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;metrics-server&lt;/b&gt;: metrics API for HPAs and kubectl top" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="218" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;aws-load-balancer-controller&lt;/b&gt;: pod IPs into the ALB target groups" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="260" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;external-dns&lt;/b&gt;: records in the public zone" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="302" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;argocd&lt;/b&gt;: Argo CD on the ALB ingress" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="344" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;argocd-configuration&lt;/b&gt;: of-helm credential, projects, applications" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#ED7100;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="386" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;keda&lt;/b&gt;: example, kept out of the rollout" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="436" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;traefik-NOTUSED&lt;/b&gt;: not used, kept out of the rollout" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="comp">
+          <mxGeometry x="10" y="478" width="268" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" value="eu-central-1" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=0;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="1008" width="330" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="state" value="&lt;b&gt;Terraform state bucket&lt;/b&gt;&lt;br&gt;S3 backend state of every other stack&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/s3/state-bucket&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=58;spacingRight=4;spacingTop=10;container=1;collapsible=0;" vertex="1" parent="r2">
+          <mxGeometry x="16" y="40" width="298" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="state_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" vertex="1" parent="state">
+          <mxGeometry x="10" y="26" width="38" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" value="us-west-2" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#147EBA;dashed=0;" vertex="1" parent="acct">
+          <mxGeometry x="366" y="1008" width="1034" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="replica" value="&lt;b&gt;Backup replica bucket&lt;/b&gt;&lt;br&gt;Replication target of backup-bucket&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/s3/backup-bucket&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=58;spacingRight=4;spacingTop=10;container=1;collapsible=0;" vertex="1" parent="r3">
+          <mxGeometry x="16" y="40" width="290" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="replica_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" vertex="1" parent="replica">
+          <mxGeometry x="10" y="26" width="38" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="w2tier" value="&lt;b&gt;prod01-us-west-2: second region&lt;/b&gt;&lt;br&gt;Copies of the us-east-1 stacks, each with its own state key: network, edge, internal-alb; cluster/eks (EKS prod01-usw2-eks) and the same nine components; app-services/example-api; ci/roles, and ci/github-actions applied by name. Same VPC range, 10.144.0.0/16.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-west-2&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=10;spacingRight=6;spacingTop=8;" vertex="1" parent="r3">
+          <mxGeometry x="322" y="40" width="470" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="w2aurora" value="&lt;b&gt;Aurora PostgreSQL secondary: in code, kept out of the rollout&lt;/b&gt;&lt;br&gt;Joins the us-east-1 global database. Not built yet.&lt;br&gt;&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;prod01-us-west-2/aurora&lt;/font&gt;" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=top;spacingLeft=10;spacingRight=6;spacingTop=8;" vertex="1" parent="r3">
+          <mxGeometry x="804" y="40" width="214" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="users" value="&lt;b&gt;End users&lt;/b&gt;" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.users;" vertex="1" parent="1">
+          <mxGeometry x="110" y="262" width="56" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="devs" value="&lt;b&gt;Developers&lt;/b&gt;&lt;br&gt;&amp;lt;developer&amp;gt; IAM users" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.users;" vertex="1" parent="1">
+          <mxGeometry x="1962" y="168" width="56" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="op" value="&lt;b&gt;Operator workstation&lt;/b&gt;&lt;br&gt;tfctl.sh" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.client;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1158" width="56" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="gh" value="&lt;b&gt;GitHub&lt;/b&gt;" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#F6F8FA;strokeColor=#24292E;fontColor=#24292E;fontSize=14;align=left;verticalAlign=top;spacingLeft=56;spacingTop=16;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="1870" y="300" width="240" height="712" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_logo" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="10" width="36" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_actions" value="&lt;b&gt;GitHub Actions&lt;/b&gt; in each repository below" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#24292E;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="70" width="216" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_ops" value="&lt;b&gt;opsfleet&lt;/b&gt;: this repository with the Terraform code; Actions run terraform plan and apply" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="140" width="216" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_api" value="&lt;b&gt;of-api&lt;/b&gt;: API code; Actions build the image and push it to ECR" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="224" width="216" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_web" value="&lt;b&gt;of-web&lt;/b&gt;: web app; Actions build and deploy it" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="308" width="216" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_load" value="&lt;b&gt;of-load&lt;/b&gt;: stress service; Actions build the image and push it to ECR" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="392" width="216" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_note" value="&lt;font style=&quot;font-size:9px&quot; color=&quot;#687078&quot;&gt;system/github manages of-api, of-web and of-helm&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=10;fontColor=#687078;spacingLeft=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="650" width="216" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_helm" value="&lt;b&gt;of-helm&lt;/b&gt;: the of-api chart; Argo CD pulls it" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#879196;fontColor=#232F3E;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6;spacingRight=4;" vertex="1" parent="gh">
+          <mxGeometry x="12" y="576" width="216" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AAB7B8;fontColor=#232F3E;fontSize=12;align=left;verticalAlign=top;spacingLeft=12;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="290" y="1290" width="1420" height="156" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_solid" value="" style="rounded=1;arcSize=8;html=1;fillColor=#FFFFFF;strokeColor=#545B64;" vertex="1" parent="legend">
+          <mxGeometry x="16" y="38" width="56" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_solid_t" value="Solid: in the Terraform working tree and in the rollout" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="82" y="34" width="420" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_dash" value="" style="rounded=1;arcSize=8;html=1;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;" vertex="1" parent="legend">
+          <mxGeometry x="16" y="76" width="56" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_dash_t" value="Dashed: in code but kept out of the rollout; not built yet" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="82" y="72" width="420" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_path" value="Small grey text: the Terraform stack. Paths that start with system/ are under terraform/; the others are under terraform/environments/innovate-inc/." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=10;fontColor=#687078;" vertex="1" parent="legend">
+          <mxGeometry x="16" y="110" width="486" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_e1" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#1E8900;" edge="1" parent="legend">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="44" as="sourcePoint" />
+            <mxPoint x="590" y="44" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_e1_t" value="User traffic: HTTPS" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="600" y="34" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_e2" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#DD344C;" edge="1" parent="legend">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="68" as="sourcePoint" />
+            <mxPoint x="590" y="68" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_e2_t" value="Human access: IAM users, assume role" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="600" y="58" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_e3" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#ED7100;" edge="1" parent="legend">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="92" as="sourcePoint" />
+            <mxPoint x="590" y="92" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_e3_t" value="CI and delivery: OIDC, images, charts" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="600" y="82" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_e4" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#8C4FFF;" edge="1" parent="legend">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="116" as="sourcePoint" />
+            <mxPoint x="590" y="116" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_e4_t" value="DNS: NS delegation" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="600" y="106" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_e5" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#147EBA;" edge="1" parent="legend">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="140" as="sourcePoint" />
+            <mxPoint x="590" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_e5_t" value="Terraform state" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
+          <mxGeometry x="600" y="130" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_facts" value="One account holds every environment and every shared service.&lt;br&gt;No AWS Organization: no OUs and no SCPs.&lt;br&gt;Human access: IAM users in one IAM group; no IAM Identity Center.&lt;br&gt;Isolation between workloads: IAM policy, VPC and Kubernetes namespace." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#232F3E;spacingLeft=12;spacingTop=4;strokeColor=#CD2264;fillColor=#FDF2F7;rounded=1;arcSize=4;" vertex="1" parent="legend">
+          <mxGeometry x="860" y="30" width="544" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="e_users_ga" value="HTTPS" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#1E8900;fontSize=10;fontColor=#1E8900;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="users" target="ga">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_users_cf" value="HTTPS" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#1E8900;fontSize=10;fontColor=#1E8900;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="users" target="fe_cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_devs_group" value="IAM user in the group" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#DD344C;fontSize=10;fontColor=#DD344C;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="devs" target="iam_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_devs_deploy" value="assume role,&lt;br&gt;kubectl in namespace of" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#DD344C;fontSize=10;fontColor=#DD344C;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="devs" target="iam_deploy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gha_oidc" value="OIDC: terraform plan&lt;br&gt;and apply, image push,&lt;br&gt;web deploy" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#ED7100;fontSize=10;fontColor=#B35A00;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gh_actions" target="iam_oidc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ecr_eks" value="image&lt;br&gt;pull" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#ED7100;fontSize=10;fontColor=#B35A00;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.295;entryDx=0;entryDy=0;" edge="1" parent="1" source="ecr" target="eks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_argo_helm" value="pulls charts" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#ED7100;fontSize=10;fontColor=#B35A00;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c8" target="gh_helm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ns_pub" value="NS delegation" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#8C4FFF;fontSize=10;fontColor=#6B40C4;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="z_parent" target="z_public">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ns_int" value="NS delegation" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#8C4FFF;fontSize=10;fontColor=#6B40C4;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="z_parent" target="z_internal">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_op_state" value="Terraform state" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#147EBA;fontSize=10;fontColor=#147EBA;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="op" target="state">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

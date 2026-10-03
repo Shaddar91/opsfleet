@@ -11,17 +11,17 @@ variable "rule_name" {
   type = string
 }
 variable "targets" {
-  type = list
+  type = list(any)
 }
 variable "input" {
-  type = string
+  type    = string
   default = ""
 }
 variable "lambda" {
-    type = string
-    default = null
+  type    = string
+  default = null
 }
 variable "role_arn" {
-  type = string
+  type    = string
   default = null
 }

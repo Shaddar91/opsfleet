@@ -67,7 +67,7 @@ resource "aws_launch_template" "main" {
   name                   = "${var.environment}-${var.application}-${each.key}-lt"
   update_default_version = var.update_default_version
   image_id               = each.value.image_id
-  user_data = base64encode(templatefile(coalesce(var.user_data, "${path.module}/files/user_data.tpl"), merge(var.user_data_vars, {
+  user_data = base64encode(templatefile(coalesce(var.user_data, "${path.module}/files/user_data.mime"), merge(var.user_data_vars, {
     NODE_GROUP_NAME       = each.key
     CAPACITY_TYPE         = each.value.capacity_type
     ENVIRONMENT           = var.environment

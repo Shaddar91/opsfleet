@@ -1,0 +1,167 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "3.2.1"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "3.3.0"
+    }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = "2.4.1"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/cluster/eks/components/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_key_prefix    = "${STATE_KEY_PREFIX}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
+data "terraform_remote_state" "network" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/network/network.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  vpc_id               = data.terraform_remote_state.network.outputs.vpc_id
+  vpc_cidr             = data.terraform_remote_state.network.outputs.vpc_cidr
+  azs                  = data.terraform_remote_state.network.outputs.azs
+  public_subnets       = data.terraform_remote_state.network.outputs.public_subnets
+  private_subnets      = data.terraform_remote_state.network.outputs.private_subnets
+  internal_subnets     = data.terraform_remote_state.network.outputs.internal_subnets
+  nat_public_ips       = data.terraform_remote_state.network.outputs.nat_public_ips
+  bastion_sg_id        = data.terraform_remote_state.network.outputs.bastion_sg_id
+  bastion_instance_id  = data.terraform_remote_state.network.outputs.bastion_instance_id
+  network_cluster_name = data.terraform_remote_state.network.outputs.cluster_name
+}
+
+data "terraform_remote_state" "eks" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/cluster/eks/eks.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  eks_cluster               = data.terraform_remote_state.eks.outputs.cluster
+  cluster_name              = data.terraform_remote_state.eks.outputs.cluster_name
+  cluster_arn               = data.terraform_remote_state.eks.outputs.cluster_arn
+  cluster_version           = data.terraform_remote_state.eks.outputs.cluster_version
+  cluster_endpoint          = data.terraform_remote_state.eks.outputs.cluster_endpoint
+  cluster_ca                = data.terraform_remote_state.eks.outputs.cluster_ca
+  cluster_security_group_id = data.terraform_remote_state.eks.outputs.cluster_security_group_id
+  node_security_group_id    = data.terraform_remote_state.eks.outputs.node_security_group_id
+  node_security_group       = data.terraform_remote_state.eks.outputs.sg
+  oidc_provider_arn         = data.terraform_remote_state.eks.outputs.oidc_provider_arn
+  oidc_issuer_url           = data.terraform_remote_state.eks.outputs.oidc_issuer_url
+  oidc_k8_provider_url      = data.terraform_remote_state.eks.outputs.oidc_k8_provider_url
+  addon_versions            = data.terraform_remote_state.eks.outputs.addon_versions
+  tg_names                  = data.terraform_remote_state.eks.outputs.tg_names
+  asg_names                 = data.terraform_remote_state.eks.outputs.asg_names
+  cluster_role_arn          = data.terraform_remote_state.eks.outputs.cluster_role_arn
+  cluster_role_name         = data.terraform_remote_state.eks.outputs.cluster_role_name
+  node_group_role_arn       = data.terraform_remote_state.eks.outputs.node_group_role_arn
+  node_group_role_name      = data.terraform_remote_state.eks.outputs.node_group_role_name
+  karpenter_node_role_arn   = data.terraform_remote_state.eks.outputs.karpenter_node_role_arn
+  karpenter_node_role_name  = data.terraform_remote_state.eks.outputs.karpenter_node_role_name
+}
+
+data "terraform_remote_state" "public_zone" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/r53/opsfleet/opsfleet.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  public_zone_id           = data.terraform_remote_state.public_zone.outputs.zone_id
+  public_zone_name_servers = data.terraform_remote_state.public_zone.outputs.name_servers
+  public_zone_domain_name  = data.terraform_remote_state.public_zone.outputs.domain_name
+  public_zone_arn          = data.terraform_remote_state.public_zone.outputs.arn
+  internal_zone_id          = data.terraform_remote_state.public_zone.outputs.internal_zone_id
+  internal_zone_domain_name = data.terraform_remote_state.public_zone.outputs.internal_domain_name
+}
+
+#exec shares the aws provider's ambient credentials; a profile pinned on only one side splits the identity
+locals {
+  eks_exec_api_version = "client.authentication.k8s.io/v1beta1"
+  eks_token_args       = ["eks", "get-token", "--cluster-name", local.cluster_name, "--region", var.region]
+}
+
+provider "kubernetes" {
+  host                   = local.cluster_endpoint
+  cluster_ca_certificate = base64decode(local.cluster_ca)
+  exec {
+    api_version = local.eks_exec_api_version
+    command     = "aws"
+    args        = local.eks_token_args
+  }
+}
+
+provider "helm" {
+  kubernetes = {
+    host                   = local.cluster_endpoint
+    cluster_ca_certificate = base64decode(local.cluster_ca)
+    exec = {
+      api_version = local.eks_exec_api_version
+      command     = "aws"
+      args        = local.eks_token_args
+    }
+  }
+}
+
+provider "kubectl" {
+  host                   = local.cluster_endpoint
+  cluster_ca_certificate = base64decode(local.cluster_ca)
+  #the default kubeconfig may point at another cluster; never merge it
+  load_config_file = false
+  exec {
+    api_version = local.eks_exec_api_version
+    command     = "aws"
+    args        = local.eks_token_args
+  }
+}

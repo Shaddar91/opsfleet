@@ -5,7 +5,7 @@
       "Sid": "EnableIAMUserPermissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::${account_id}:root"
+        "AWS": "arn:aws:iam::${ACCOUNT_ID}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -14,7 +14,7 @@
       "Sid": "AllowCloudWatchLogs",
       "Effect": "Allow",
       "Principal": {
-        "Service": "logs.${region}.amazonaws.com"
+        "Service": "logs.${REGION}.amazonaws.com"
       },
       "Action": [
         "kms:Encrypt*",
@@ -26,7 +26,7 @@
       "Resource": "*",
       "Condition": {
         "ArnLike": {
-          "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${region}:${account_id}:log-group:${log_group_name}"
+          "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${REGION}:${ACCOUNT_ID}:log-group:${LOG_GROUP_NAME}"
         }
       }
     }

@@ -179,7 +179,7 @@ resource "aws_s3_bucket_policy" "policy" {
   policy = var.policy == null ? templatefile(
     "${path.module}/files/bucket_policy.json",
     {
-      bucket = var.bucket
+      BUCKET = var.bucket
     }
   ) : var.policy
   depends_on = [

@@ -1,0 +1,29 @@
+replicas: 2
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+nodeSelector:
+  role: system
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+priorityClassName: system-cluster-critical
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - metrics-server
+        topologyKey: kubernetes.io/hostname
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1

@@ -7,7 +7,7 @@ resource "aws_instance" "main" {
   associate_public_ip_address = var.public_ip
   user_data                   = templatefile(var.path, var.user_data_vars)
   credit_specification {
-    cpu_credits                 = "standard"
+    cpu_credits = "standard"
   }
   iam_instance_profile                 = aws_iam_instance_profile.ec2_profile.name
   instance_initiated_shutdown_behavior = "stop"

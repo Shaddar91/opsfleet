@@ -13,10 +13,10 @@
         ],
         "Effect": "Allow",
         "Resource": [
-            "${source_bucket}",
-            "${source_bucket}/*",
-            "${destination_bucket}",
-            "${destination_bucket}/*"
+            "${SOURCE_BUCKET}",
+            "${SOURCE_BUCKET}/*",
+            "${DESTINATION_BUCKET}",
+            "${DESTINATION_BUCKET}/*"
         ]
     },
     {
@@ -28,29 +28,29 @@
         ],
         "Effect": "Allow",
         "Resource": [
-            "${source_bucket}/*",
-            "${destination_bucket}/*"
+            "${SOURCE_BUCKET}/*",
+            "${DESTINATION_BUCKET}/*"
         ]
       },
       {
         "Action": "kms:Decrypt",
 			  "Effect": "Allow",
-			  "Resource": "${source_kms}",
+			  "Resource": "${SOURCE_KMS}",
 			  "Condition": {
 				  "StringLike": {
-					  "kms:ViaService": "s3.${source_region}.amazonaws.com",
-					  "kms:EncryptionContext:aws:s3:arn": ["${source_bucket}/*"]
+					  "kms:ViaService": "s3.${SOURCE_REGION}.amazonaws.com",
+					  "kms:EncryptionContext:aws:s3:arn": ["${SOURCE_BUCKET}/*"]
 				  }
 			  }
       },
 		  {
 			  "Action": "kms:Encrypt",
 			  "Effect": "Allow",
-			  "Resource": "${destination_kms}",
+			  "Resource": "${DESTINATION_KMS}",
 			  "Condition": {
 				  "StringLike": {
-					  "kms:ViaService": "s3.${destination_region}.amazonaws.com",
-					  "kms:EncryptionContext:aws:s3:arn": ["${destination_bucket}/*"]
+					  "kms:ViaService": "s3.${DESTINATION_REGION}.amazonaws.com",
+					  "kms:EncryptionContext:aws:s3:arn": ["${DESTINATION_BUCKET}/*"]
 				  }
 			  }
 		  }

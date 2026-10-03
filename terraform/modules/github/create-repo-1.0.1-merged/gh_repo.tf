@@ -8,12 +8,39 @@ resource "github_repository" "main" {
   has_issues         = var.has_issues
   archive_on_destroy = var.archive_on_destroy
 
+  vulnerability_alerts = var.vulnerability_alerts
+
   dynamic "template" {
     for_each = var.template == null ? [] : [var.template]
     content {
       owner                = template.value.owner
       repository           = template.value.repository
       include_all_branches = template.value.include_all_branches
+    }
+  }
+
+  dynamic "security_and_analysis" {
+    for_each = var.secret_scanning ? [1] : []
+    content {
+      secret_scanning {
+        status = "enabled"
+      }
+      secret_scanning_push_protection {
+        status = "enabled"
+      }
+    }
+  }
+}
+
+resource "github_repository_dependabot_security_updates" "main" {
+  count      = var.dependabot_security_updates ? 1 : 0
+  repository = github_repository.main.name
+  enabled    = true
+
+  lifecycle {
+    precondition {
+      condition     = var.vulnerability_alerts == true
+      error_message = "dependabot_security_updates needs vulnerability_alerts = true."
     }
   }
 }

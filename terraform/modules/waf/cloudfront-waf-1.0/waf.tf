@@ -1,13 +1,3 @@
-locals {
-  name = coalesce(var.name, "${var.environment}-${var.application}-cf-web-acl")
-
-  tags = {
-    Name        = local.name
-    Environment = var.environment
-    Terraform   = "true"
-  }
-}
-
 resource "aws_wafv2_ip_set" "rate_limit_excluded" {
   count              = length(var.rate_limit_excluded_ips) > 0 ? 1 : 0
   region             = "us-east-1"

@@ -1,0 +1,112 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "2.8.1"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_key_prefix    = "${STATE_KEY_PREFIX}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
+data "terraform_remote_state" "ansible_bucket" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/s3/ansible-bucket/ansible-bucket.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  ansible_bucket_name = data.terraform_remote_state.ansible_bucket.outputs.bucket_name
+  ansible_bucket_arn  = data.terraform_remote_state.ansible_bucket.outputs.bucket_arn
+}
+
+data "terraform_remote_state" "ssh_key" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/ssh-key/ssh-key.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  ssh_key_name        = data.terraform_remote_state.ssh_key.outputs.key_name
+  ssh_key_pair_id     = data.terraform_remote_state.ssh_key.outputs.key_pair_id
+  ssh_key_fingerprint = data.terraform_remote_state.ssh_key.outputs.fingerprint
+}
+
+data "terraform_remote_state" "public_zone" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/r53/opsfleet/opsfleet.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  public_zone_id           = data.terraform_remote_state.public_zone.outputs.zone_id
+  public_zone_name_servers = data.terraform_remote_state.public_zone.outputs.name_servers
+  public_zone_domain_name  = data.terraform_remote_state.public_zone.outputs.domain_name
+  public_zone_arn          = data.terraform_remote_state.public_zone.outputs.arn
+  internal_zone_id          = data.terraform_remote_state.public_zone.outputs.internal_zone_id
+  internal_zone_domain_name = data.terraform_remote_state.public_zone.outputs.internal_domain_name
+}
+
+data "terraform_remote_state" "global_accelerator" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/innovate-inc/global/global-accelerator/global-accelerator.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  accelerator_listener_arn   = data.terraform_remote_state.global_accelerator.outputs.listener_arn
+  accelerator_app_fqdn       = data.terraform_remote_state.global_accelerator.outputs.app_fqdn
+  accelerator_dns_name       = data.terraform_remote_state.global_accelerator.outputs.accelerator_dns_name
+  accelerator_hosted_zone_id = data.terraform_remote_state.global_accelerator.outputs.accelerator_hosted_zone_id
+}

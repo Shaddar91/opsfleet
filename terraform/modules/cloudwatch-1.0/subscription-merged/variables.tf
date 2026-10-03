@@ -1,5 +1,5 @@
 variable "filter_name" {
-    type = string
+  type = string
 }
 variable "log_group" {
   type    = map(string)
@@ -11,7 +11,7 @@ variable "lambda" {
 }
 
 variable "pattern" {
-    type = string
+  type = string
 }
 
 variable "region" {

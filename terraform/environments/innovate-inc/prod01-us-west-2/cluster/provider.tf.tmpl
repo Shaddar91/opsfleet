@@ -1,0 +1,62 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+    http = {
+      source  = "hashicorp/http"
+      version = "3.6.2"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_key_prefix    = "${STATE_KEY_PREFIX}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
+data "terraform_remote_state" "network" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/network/network.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  vpc_id               = data.terraform_remote_state.network.outputs.vpc_id
+  vpc_cidr             = data.terraform_remote_state.network.outputs.vpc_cidr
+  azs                  = data.terraform_remote_state.network.outputs.azs
+  public_subnets       = data.terraform_remote_state.network.outputs.public_subnets
+  private_subnets      = data.terraform_remote_state.network.outputs.private_subnets
+  internal_subnets     = data.terraform_remote_state.network.outputs.internal_subnets
+  nat_public_ips       = data.terraform_remote_state.network.outputs.nat_public_ips
+  bastion_sg_id        = data.terraform_remote_state.network.outputs.bastion_sg_id
+  bastion_instance_id  = data.terraform_remote_state.network.outputs.bastion_instance_id
+  network_cluster_name = data.terraform_remote_state.network.outputs.cluster_name
+}

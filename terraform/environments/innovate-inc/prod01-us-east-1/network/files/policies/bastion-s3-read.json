@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadBastionAnsible",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "${ROLES_OBJECT_ARN}",
+        "${PLAYBOOK_OBJECT_ARN}"
+      ]
+    }
+  ]
+}

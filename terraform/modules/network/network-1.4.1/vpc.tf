@@ -14,10 +14,11 @@ resource "aws_default_security_group" "default" {
 module "flow_logs_role" {
   count         = var.flow_logs_iam_role_arn == null ? 1 : 0
   source        = "../../iam/role"
-  name          = "${local.name}-vpc-flow-logs"
-  aws_service   = "vpc-flow-logs.amazonaws.com"
   custom_policy = true
-  policy_file   = file("${path.module}/files/policies/flow-logs-policy.json")
+
+  name        = "${local.name}-vpc-flow-logs"
+  aws_service = "vpc-flow-logs.amazonaws.com"
+  policy_file = file("${path.module}/files/policies/flow-logs-policy.json")
 }
 resource "aws_flow_log" "main" {
   iam_role_arn    = var.flow_logs_iam_role_arn != null ? var.flow_logs_iam_role_arn : module.flow_logs_role[0].role_arn
@@ -40,9 +41,9 @@ resource "aws_kms_key" "flow_logs" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
   policy = templatefile("${path.module}/files/policies/kms-flow-logs-policy.json", {
-    account_id     = data.aws_caller_identity.current.account_id
-    region         = var.region
-    log_group_name = "${local.name}-vpc-flow-logs"
+    ACCOUNT_ID     = data.aws_caller_identity.current.account_id
+    REGION         = var.region
+    LOG_GROUP_NAME = "${local.name}-vpc-flow-logs"
   })
   tags = {
     Name = "${local.name}-flow-logs-kms"

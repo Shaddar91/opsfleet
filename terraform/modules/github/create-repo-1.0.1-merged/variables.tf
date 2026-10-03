@@ -32,6 +32,24 @@ variable "archive_on_destroy" {
   default     = false
 }
 
+variable "vulnerability_alerts" {
+  description = "Dependabot alerts for vulnerable dependencies; null leaves the repository's current setting alone"
+  type        = bool
+  default     = null
+}
+
+variable "dependabot_security_updates" {
+  description = "Dependabot opens pull requests that fix vulnerable dependencies; needs vulnerability_alerts = true"
+  type        = bool
+  default     = false
+}
+
+variable "secret_scanning" {
+  description = "Secret scanning plus push protection, which rejects a push that carries a secret; free on public repositories, a paid add-on on private ones"
+  type        = bool
+  default     = false
+}
+
 variable "template" {
   description = "Template repository to create from; null creates an empty repository"
   type = object({

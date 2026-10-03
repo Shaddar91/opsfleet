@@ -1,5 +1,7 @@
 module "alb_log_bucket" {
-  source                  = "../../s3/s3-v1.1-merged"
+  source         = "../../s3/s3-v1.1-merged"
+  lifecycle_rule = true
+
   bucket                  = local.bucket
   acl                     = "log-delivery-write"
   bucket_versioning       = var.bucket_versioning
@@ -11,13 +13,12 @@ module "alb_log_bucket" {
   policy = templatefile(
     "${path.module}/files/alb_s3.json",
     {
-      bucket     = local.bucket
-      account_id = data.aws_caller_identity.current.account_id
-      alb_region = var.alb_region
+      BUCKET     = local.bucket
+      ACCOUNT_ID = data.aws_caller_identity.current.account_id
+      ALB_REGION = var.alb_region
     }
   )
-  lifecycle_rule = true
-  expire_after   = var.expire_days
+  expire_after = var.expire_days
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "main" {

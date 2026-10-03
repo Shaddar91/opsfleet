@@ -5,7 +5,7 @@
       "Sid": "AllowCrossAccountPull",
       "Effect": "Allow",
       "Principal": {
-        "AWS": ${jsonencode(account_ids)}
+        "AWS": ${jsonencode(ACCOUNT_IDS)}
       },
       "Action": [
         "ecr:GetDownloadUrlForLayer",

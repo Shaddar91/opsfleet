@@ -1,33 +1,19 @@
 #Route53 alias: the module's Global Accelerator if created, else the external one, else the ALB.
 #create_route53_record = false disables it (DNS managed elsewhere).
 
-locals {
-  route53_target_dns = (
-    var.create_global_accelerator ? aws_globalaccelerator_accelerator.main[0].dns_name :
-    var.use_external_global_accelerator ? var.external_global_accelerator_dns_name :
-    aws_lb.main.dns_name
-  )
-
-  route53_target_zone = (
-    var.create_global_accelerator ? aws_globalaccelerator_accelerator.main[0].hosted_zone_id :
-    var.use_external_global_accelerator ? var.external_global_accelerator_zone_id :
-    aws_lb.main.zone_id
-  )
-}
-
 module "r53_alias" {
   count = var.create_route53_record ? 1 : 0
 
-  source             = "../../r53/r53-1.2-merged/"
-  alias              = true
+  source       = "../../r53/r53-1.2-merged/"
+  alias        = true
+  health_check = true
+
   zone_id            = var.hosted_zone_id
   domain_name        = var.domain_name
   type_of_dns_record = "A"
 
   resource_alias = local.route53_target_dns
   resource_zone  = local.route53_target_zone
-
-  health_check = true
 
   depends_on = [
     aws_lb.main

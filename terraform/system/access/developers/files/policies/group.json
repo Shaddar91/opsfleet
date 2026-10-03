@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyStateBucket",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:${PARTITION}:s3:::${STATE_BUCKET}",
+        "arn:${PARTITION}:s3:::${STATE_BUCKET}/*"
+      ]
+    },
+    {
+      "Sid": "DenyAccessPointPaths",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": "arn:${PARTITION}:s3:*:${ACCOUNT_ID}:accesspoint/*"
+    },
+    {
+      "Sid": "DenySecretValues",
+      "Effect": "Deny",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:BatchGetSecretValue"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDecryptThroughSecretStores",
+      "Effect": "Deny",
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": [
+            "ssm.*.amazonaws.com",
+            "secretsmanager.*.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AssumeDeployRole",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "${DEPLOY_ROLE_ARN}"
+    }
+  ]
+}

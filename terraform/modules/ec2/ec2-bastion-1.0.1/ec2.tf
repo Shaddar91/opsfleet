@@ -11,10 +11,23 @@ resource "aws_instance" "main" {
     cpu_credits = "standard"
   }
   iam_instance_profile                 = var.iam_instance_profile
-  instance_initiated_shutdown_behavior = "stop"
+  instance_initiated_shutdown_behavior = var.spot ? null : "stop"
   metadata_options {
     http_tokens = "required"
   }
+
+  #persistent + stop: an interruption stops the instance and EC2 starts the same one, same id and root volume, when capacity returns
+  dynamic "instance_market_options" {
+    for_each = var.spot ? [1] : []
+    content {
+      market_type = "spot"
+      spot_options {
+        spot_instance_type             = "persistent"
+        instance_interruption_behavior = "stop"
+      }
+    }
+  }
+
   tags = {
     Name = "${var.environment}-${var.application}"
   }

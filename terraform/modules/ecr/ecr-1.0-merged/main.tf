@@ -36,6 +36,6 @@ resource "aws_ecr_repository_policy" "this" {
 
   repository = aws_ecr_repository.this.name
   policy = templatefile("${path.module}/files/policies/cross-account-pull.json", {
-    account_ids = var.allowed_account_ids
+    ACCOUNT_IDS = var.allowed_account_ids
   })
 }

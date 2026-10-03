@@ -1,7 +1,3 @@
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
 variable "application" {
   type    = string
   default = null
@@ -81,6 +77,11 @@ variable "bastion_iam_instance_profile" {
   type        = string
   default     = null
   description = "Instance profile name for the bastion, created by the caller"
+}
+variable "bastion_spot" {
+  type        = bool
+  default     = false
+  description = "Run the bastion as a persistent Spot Instance that stops on interruption; a change replaces the bastion"
 }
 
 variable "create_internal_hosted_zone" {

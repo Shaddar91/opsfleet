@@ -1,0 +1,1 @@
+create_spot_service_linked_role = false

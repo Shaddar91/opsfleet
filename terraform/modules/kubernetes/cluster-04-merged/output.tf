@@ -60,12 +60,6 @@ output "certificate_authority" {
   sensitive = true
 }
 
-data "aws_ebs_volumes" "eks_volumes" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.environment}-${var.application}-ebs"]
-  }
-}
 output "ebs_volume_ids" {
   value = data.aws_ebs_volumes.eks_volumes.ids
 }

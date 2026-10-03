@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListSiteBucket",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "${WEB_BUCKET_ARN}"
+    },
+    {
+      "Sid": "SyncSiteObjects",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:DeleteObject"],
+      "Resource": "${WEB_BUCKET_ARN}/*"
+    },
+    {
+      "Sid": "InvalidateSite",
+      "Effect": "Allow",
+      "Action": ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"],
+      "Resource": "${DISTRIBUTION_ARN}"
+    },
+    {
+      "Sid": "PublishAndFetchBuilds",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "${ARTIFACT_BUCKET_ARN}/${ARTIFACT_PREFIX}/*"
+    },
+    {
+      "Sid": "ListBuilds",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "${ARTIFACT_BUCKET_ARN}",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["${ARTIFACT_PREFIX}/*"]
+        }
+      }
+    }
+  ]
+}

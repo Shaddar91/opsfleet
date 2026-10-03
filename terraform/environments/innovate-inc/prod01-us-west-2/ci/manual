@@ -1,0 +1,2 @@
+#stacks roll, unroll, apply all and destroy all skip; they run only by name: ./tfctl.sh prod01-us-west-2/ci apply github-actions
+github-actions

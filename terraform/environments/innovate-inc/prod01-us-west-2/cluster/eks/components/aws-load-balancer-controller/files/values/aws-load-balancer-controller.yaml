@@ -1,0 +1,10 @@
+clusterName: ${jsonencode(CLUSTER_NAME)}
+region: ${jsonencode(REGION)}
+vpcId: ${jsonencode(VPC_ID)}
+serviceAccount:
+  name: ${jsonencode(SERVICE_ACCOUNT)}
+nodeSelector:
+  role: system
+enableServiceMutatorWebhook: false
+ingressClass: alb
+createIngressClassResource: true

@@ -70,7 +70,7 @@ Every instance type must run the group's architecture, taken from `ami_type` or,
 
 ## User data
 
-`files/user_data.tpl` is the default template: MIME multipart, no `/etc/eks/bootstrap.sh`, arch-neutral.
+`files/user_data.mime` is the default template: MIME multipart, no `/etc/eks/bootstrap.sh`, arch-neutral.
 
 - EKS-AMI groups: a shell part that sets the hostname `<environment>-<application>-<capacity>-<group>`. EKS merges its own nodeadm NodeConfig.
 - `image_id` groups: EKS merges nothing, so a NodeConfig part adds the full cluster block, plus `--node-labels` and `--register-with-taints` so labels and taints exist when the node registers.

@@ -1,0 +1,692 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="current-access" name="Current state: access">
+    <mxGraphModel dx="3400" dy="2300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3400" pageHeight="2300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Current state: sign-in, MFA, STS assume role and commands in the one AWS account" style="text;html=1;align=left;verticalAlign=middle;fontSize=28;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="2600" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Drawn from the Terraform code and the workflows it deploys; it makes no claim about what is deployed today." style="text;html=1;align=left;verticalAlign=middle;fontSize=16;fontColor=#545B64;" vertex="1" parent="1">
+          <mxGeometry x="40" y="52" width="2600" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle2" value="Each lane starts outside AWS on the left and ends at the rights a principal gets. Angle brackets mark a site value kept out of this repository; small grey text names the Terraform stack (path under terraform/)." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#687078;" vertex="1" parent="1">
+          <mxGeometry x="40" y="76" width="2600" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="outside" value="Outside AWS" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#545B64;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="300" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="acct" value="AWS account (standalone, no AWS Organization)" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_account;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=15;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;strokeColor=#CD2264;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#CD2264;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="420" y="104" width="2960" height="1922" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#D5DBDB;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="36" width="2920" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_t" value="1 Developer: IAM user, MFA, sts:AssumeRole, kubectl in namespace of" style="text;html=1;align=left;verticalAlign=middle;fontSize=17;fontStyle=1;fontColor=#DD344C;" vertex="1" parent="acct">
+          <mxGeometry x="32" y="42" width="2200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#D5DBDB;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="502" width="2920" height="316" as="geometry" />
+        </mxCell>
+        <mxCell id="l2_t" value="2 Operator: source profile, sts:AssumeRole, tfctl.sh, cluster admin" style="text;html=1;align=left;verticalAlign=middle;fontSize=17;fontStyle=1;fontColor=#147EBA;" vertex="1" parent="acct">
+          <mxGeometry x="32" y="508" width="2200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#D5DBDB;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="834" width="2920" height="762" as="geometry" />
+        </mxCell>
+        <mxCell id="l3_t" value="3 CI: GitHub Actions, OIDC token, sts:AssumeRoleWithWebIdentity, one role per pipeline" style="text;html=1;align=left;verticalAlign=middle;fontSize=17;fontStyle=1;fontColor=#ED7100;" vertex="1" parent="acct">
+          <mxGeometry x="32" y="840" width="2200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="l4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFBFB;strokeColor=#D5DBDB;" vertex="1" parent="acct">
+          <mxGeometry x="20" y="1612" width="2920" height="294" as="geometry" />
+        </mxCell>
+        <mxCell id="l4_t" value="4 In cluster: Argo CD and pods" style="text;html=1;align=left;verticalAlign=middle;fontSize=17;fontStyle=1;fontColor=#8C4FFF;" vertex="1" parent="acct">
+          <mxGeometry x="32" y="1618" width="2200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="d0" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Developer laptop&lt;/font&gt;&lt;/b&gt;&lt;br&gt;AWS CLI and kubectl, signed with the developer's own IAM user credentials." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="184" width="256" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="d0_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.client;dashed=0;" vertex="1" parent="d0">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;IAM user &amp;lt;developer&amp;gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Member of IAM group prod01-us-developers (system/access/developers). The owner creates the user outside this repository and adds it to the group; membership is the only per-person step." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.user;dashed=0;" vertex="1" parent="d1">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Access key (CLI) or password (console)&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Long-lived; created with the user, outside this repository. Everything done with them runs with the group rights below." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="330" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d2_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.long_term_security_credential;dashed=0;" vertex="1" parent="d2">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Assume the deploy role&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=6;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="620" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d3_c" value="aws sts assume-role&lt;br&gt;&amp;nbsp;--role-arn &amp;lt;deploy-role-arn&amp;gt;&lt;br&gt;&amp;nbsp;--role-session-name &amp;lt;name&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#F4F6F8;strokeColor=#D5DBDB;" vertex="1" parent="d3">
+          <mxGeometry x="8" y="32" width="240" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="d3_m" value="&amp;nbsp;--serial-number &amp;lt;mfa-device-arn&amp;gt;&lt;br&gt;&amp;nbsp;--token-code &amp;lt;code&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;" vertex="1" parent="d3">
+          <mxGeometry x="8" y="88" width="240" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="d3_t" value="The dashed lines are the MFA step of the access design; today the call succeeds without them." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;align=center;" vertex="1" parent="d3">
+          <mxGeometry x="6" y="132" width="244" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;AWS STS: sts:AssumeRole&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Both sides must allow the call: group.json allows sts:AssumeRole on the deploy role, and the role trusts the account root with no condition." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="910" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d4_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="d4">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;MFA: designed, not yet a condition in the deploy role trust policy&lt;/font&gt;&lt;/b&gt;&lt;br&gt;No MFA device, aws:MultiFactorAuthPresent condition or token code exists in any Terraform file, policy, script or workflow, so STS asks for no code." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1200" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d5_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.mfa_token;dashed=1;" vertex="1" parent="d5">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Temporary credentials&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Access key id, secret key and session token of the deploy role. One hour: the role sets no maximum session duration, so the IAM default applies." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1490" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d6_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="d6">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d7" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;prod01-us-developers-deploy-role&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/access/developers&lt;/font&gt;&lt;br&gt;Policy: eks:DescribeCluster on prod01-us-eks, nothing else. Its Kubernetes rights come from the access entry in step 9." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1780" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d7_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="d7">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d8" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Point kubectl at the cluster&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=6;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2070" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d8_c" value="aws eks update-kubeconfig&lt;br&gt;&amp;nbsp;--region us-east-1&lt;br&gt;&amp;nbsp;--name prod01-us-eks&lt;br&gt;&amp;nbsp;--role-arn &amp;lt;deploy-role-arn&amp;gt;&lt;br&gt;kubectl config set-context&lt;br&gt;&amp;nbsp;--current --namespace of" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#F4F6F8;strokeColor=#D5DBDB;" vertex="1" parent="d8">
+          <mxGeometry x="8" y="32" width="240" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="d8_t" value="The stack output kubeconfig_command, run once with the user's own keys. Afterwards each kubectl call runs aws eks get-token, which assumes the deploy role." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;align=center;" vertex="1" parent="d8">
+          <mxGeometry x="6" y="134" width="244" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="d9" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;EKS prod01-us-eks: access entry&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/access/developers&lt;/font&gt;&lt;br&gt;STANDARD entry for the deploy role: AmazonEKSEditPolicy in namespace of only. The stack refuses any kube-* namespace." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2360" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d9_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="d9">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="d10" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Commands in namespace of&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=6;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2650" y="80" width="256" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="d10_c" value="kubectl get pods&lt;br&gt;kubectl apply -f &amp;lt;manifest&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#F4F6F8;strokeColor=#D5DBDB;" vertex="1" parent="d10">
+          <mxGeometry x="8" y="32" width="240" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="d10_t" value="Kubernetes edit rights in namespace of, nothing outside it. AWS calls signed with the user's own keys stay read only, minus the denies." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;align=center;" vertex="1" parent="d10">
+          <mxGeometry x="6" y="76" width="244" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_0" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="46" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_1" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="336" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_2" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="626" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_3" value="4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="916" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_4" value="5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1206" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_5" value="6" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1496" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_6" value="7" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1786" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_7" value="8" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="2076" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_8" value="9" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="2366" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_9" value="10" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DD344C;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="2656" y="86" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.2357;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d0" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1" target="d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d3" target="d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_4" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d4" target="d5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_5" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5" target="d6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_6" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d6" target="d7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_7" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d7" target="d8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_8" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d8" target="d9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_9" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1486;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1486;entryDx=0;entryDy=0;" edge="1" parent="1" source="d9" target="d10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_bypass" value="today: STS asks for no MFA code" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=1.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d4" target="d6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1458" y="424" />
+              <mxPoint x="2038" y="424" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="perm" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Group rights: IAM group prod01-us-developers&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/access/developers&lt;/font&gt;&lt;br&gt;ReadOnlyAccess (AWS managed policy), plus group.json:&lt;br&gt;Deny s3:* on &amp;lt;state-bucket&amp;gt; and its objects&lt;br&gt;Deny s3:* on S3 access point paths&lt;br&gt;Deny secretsmanager:GetSecretValue and BatchGetSecretValue&lt;br&gt;Deny kms:Decrypt through SSM or Secrets Manager&lt;br&gt;Allow sts:AssumeRole on the deploy role only" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=50;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="342" width="546" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="perm_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.permissions;dashed=0;" vertex="1" parent="perm">
+          <mxGeometry x="8" y="8" width="34" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_perm" value="group policy" style="html=1;rounded=0;endArrow=none;strokeWidth=1.2;strokeColor=#879196;fontSize=10;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.2344;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1" target="perm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mfa_plan" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Designed, not built yet&lt;/font&gt;&lt;/b&gt;&lt;br&gt;The deploy role trust policy gets the condition aws:MultiFactorAuthPresent; each user registers an MFA device and passes --serial-number and --token-code (the dashed lines in step 3). STS then refuses a call without a valid code." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="910" y="342" width="836" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="kreach" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Where kubectl can connect&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/cluster/eks, prod01-us-east-1/network&lt;/font&gt;&lt;br&gt;The public API endpoint accepts only the /32 of the machine that ran Terraform, read at plan time; the private endpoint answers inside the VPC. The bastion has kubectl and helm but opens only through SSM Session Manager, and ReadOnlyAccess grants no ssm:StartSession." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2070" y="342" width="836" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="o0" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Operator workstation&lt;/font&gt;&lt;/b&gt;&lt;br&gt;AWS CLI, Terraform and tfctl.sh. A site env file outside the repository sets AWS_CONFIG_FILE, AWS_PROFILE, STATE_BUCKET, STATE_BUCKET_REGION and STATE_KEY_PREFIX." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="650" width="256" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="o0_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.client;dashed=0;" vertex="1" parent="o0">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o1" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;IAM user of the source profile&lt;/font&gt;&lt;/b&gt;&lt;br&gt;In this account; created outside this repository." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o1_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.user;dashed=0;" vertex="1" parent="o1">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o2" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Source profile access key&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Long-lived key in the AWS credentials file. The profile names role_arn and source_profile, and no mfa_serial." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="330" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o2_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.long_term_security_credential;dashed=0;" vertex="1" parent="o2">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o3" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;AWS STS: sts:AssumeRole&lt;/font&gt;&lt;/b&gt;&lt;br&gt;The AWS CLI and the Terraform provider assume the role with the source keys. No MFA: the profile has no mfa_serial." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="620" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o3_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="o3">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o4" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Temporary credentials&lt;/font&gt;&lt;/b&gt;&lt;br&gt;A session of &amp;lt;terraform-role&amp;gt;; aws sts get-caller-identity reports an assumed role." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="910" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o4_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="o4">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o5" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;&amp;lt;terraform-role&amp;gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Created outside this repository: no file under terraform/ names it." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1200" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o5_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="o5">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o6" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Run Terraform&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=6;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1490" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o6_c" value="./tfctl.sh &amp;lt;tier&amp;gt; plan &amp;lt;stack&amp;gt;&lt;br&gt;./tfctl.sh &amp;lt;tier&amp;gt; apply &amp;lt;stack&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#F4F6F8;strokeColor=#D5DBDB;" vertex="1" parent="o6">
+          <mxGeometry x="8" y="32" width="240" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="o6_t" value="Also validate, output, destroy, status, roll, unroll, check, order and help. Sources the env file when STATE_BUCKET is unset; each stack's init.sh renders provider.auto.tf and runs terraform init." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;align=center;" vertex="1" parent="o6">
+          <mxGeometry x="6" y="76" width="244" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="o7" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Terraform state &amp;lt;state-bucket&amp;gt;&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/s3/state-bucket&lt;/font&gt;&lt;br&gt;eu-central-1; one encrypted key per stack under &amp;lt;prefix&amp;gt;/. The stack creates the bucket, or reads an existing one when create_state_bucket is off. Then the AWS APIs of every stack." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1780" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o7_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" vertex="1" parent="o7">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o8" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;EKS access entry admin&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;cluster/eks in each region&lt;/font&gt;&lt;br&gt;The principal that runs Terraform, read from the session by aws_iam_session_context: AmazonEKSClusterAdminPolicy, cluster scope, on prod01-us-eks and prod01-usw2-eks. The public endpoint opens to that machine's IP (/32)." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=62;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2070" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o8_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="o8">
+          <mxGeometry x="103" y="8" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="o9" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Cluster admin commands&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;spacingLeft=6;spacingTop=6;align=center;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2360" y="546" width="256" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="o9_c" value="aws eks update-kubeconfig&lt;br&gt;&amp;nbsp;--region us-east-1&lt;br&gt;&amp;nbsp;--name prod01-us-eks" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fontColor=#232F3E;spacingLeft=5;spacingTop=1;fillColor=#F4F6F8;strokeColor=#D5DBDB;" vertex="1" parent="o9">
+          <mxGeometry x="8" y="32" width="240" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="o9_t" value="Then kubectl and helm with cluster admin rights." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;align=center;" vertex="1" parent="o9">
+          <mxGeometry x="6" y="90" width="244" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_0" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="46" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_1" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="336" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_2" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="626" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_3" value="4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="916" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_4" value="5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1206" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_5" value="6" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1496" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_6" value="7" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="1786" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_7" value="8" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="2076" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_8" value="9" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#147EBA;strokeColor=#FFFFFF;strokeWidth=1.5;fontColor=#FFFFFF;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;spacing=0;" vertex="1" parent="acct">
+          <mxGeometry x="2366" y="552" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1833;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o0" target="o1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o1" target="o2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o2" target="o3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o3" target="o4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_4" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o4" target="o5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_5" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o5" target="o6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_6" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o6" target="o7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_7" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o7" target="o8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_8" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.1602;exitDx=0;exitDy=0;entryX=0.0;entryY=0.1602;entryDx=0;entryDy=0;" edge="1" parent="1" source="o8" target="o9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="guard" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Account guard: none in code.&lt;/font&gt;&lt;/b&gt; tfctl.sh, init.sh and the provider never compare the caller's account; the state bucket in the env file decides it in practice. Cluster admin follows whoever runs Terraform: an apply of cluster/eks through terraform.yml (lane 3) would move the admin entry to opsfleet-terraform-apply-role." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="766" width="2576" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="oidc" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Every row&lt;/font&gt;&lt;/b&gt;: the job asks GitHub for an OIDC token with audience sts.amazonaws.com and calls sts:AssumeRoleWithWebIdentity. STS checks the token against the account's IAM OIDC provider token.actions.githubusercontent.com (system/iam/github-oidc: created when create_provider is on, otherwise read) and against the role's trust condition on the token's sub claim." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=50;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="876" width="2880" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="oidc_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.identity_and_access_management;" vertex="1" parent="oidc">
+          <mxGeometry x="8" y="8" width="34" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="h_wf" value="Workflow (GitHub Actions)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1038" width="230" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="h_tok" value="OIDC token" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="1">
+          <mxGeometry x="292" y="1038" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="h_sts" value="STS" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="acct">
+          <mxGeometry x="88" y="934" width="60" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="h_role" value="Role, trust and rights" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="934" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="h_act" value="What the job does" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="934" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="h_gate" value="Gate" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#545B64;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="934" width="400" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_a" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;opsfleet: terraform.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Manual dispatch with the inputs tier, stack and apply." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1066" width="236" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_a_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="wf_a">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tok_a" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1079" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sts_a" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="acct">
+          <mxGeometry x="92" y="975" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="role_a" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;opsfleet-terraform-plan-role&lt;/font&gt;&lt;/b&gt;: ReadOnlyAccess. Trust: sub repo:&amp;lt;github-owner&amp;gt;@&amp;lt;owner-id&amp;gt;/opsfleet@&amp;lt;repo-id&amp;gt;:ref:refs/heads/&amp;lt;default-branch&amp;gt;.&lt;br&gt;&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;opsfleet-terraform-apply-role&lt;/font&gt;&lt;/b&gt;: AdministratorAccess. Trust: the same sub prefix ending :environment:terraform.&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/iam/terraform-ci&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="962" width="680" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="role_a_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="role_a">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_a" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;plan job&lt;/font&gt;&lt;/b&gt;: Vault JWT login (Vault role opsfleet-plan) exports the common values, the account id among them, and the stack's own values; assume the plan role; ./tfctl.sh &amp;lt;tier&amp;gt; plan &amp;lt;stack&amp;gt;; the run summary keeps resource addresses and totals.&lt;br&gt;&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;apply job&lt;/font&gt;&lt;/b&gt;: needs plan; Vault role opsfleet-apply; assume the apply role; ./tfctl.sh &amp;lt;tier&amp;gt; apply &amp;lt;stack&amp;gt; --auto-approve." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="962" width="1060" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="gate_a" value="Manual dispatch only. The apply job runs only with the apply box ticked, after approval on the GitHub environment terraform." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="962" width="900" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.2946;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wf_a" target="tok_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tok_a" target="sts_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.2946;entryDx=0;entryDy=0;" edge="1" parent="1" source="sts_a" target="role_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.2946;exitDx=0;exitDy=0;entryX=0.0;entryY=0.2946;entryDx=0;entryDy=0;" edge="1" parent="1" source="role_a" target="act_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_b" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-api: ci.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Push and pull request on master: test, then build amd64 and arm64." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1188" width="236" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_b_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="wf_b">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tok_b" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1201" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sts_b" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="acct">
+          <mxGeometry x="92" y="1097" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="role_b" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;system-of-api-ci-role&lt;/font&gt;&lt;/b&gt; (system/ecr/of-api), &lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;prod01-us-of-api-ci-role&lt;/font&gt;&lt;/b&gt; or &lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;prod01-usw2-of-api-ci-role&lt;/font&gt;&lt;/b&gt; (ci/roles in each region): whichever ARN the AWS_ROLE_ARN secret holds; each of those stacks writes it and the last apply wins. Trust: sub for of-api, ref refs/heads/master. Rights: ecr:GetAuthorizationToken, push and pull on ECR of-api only." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="1084" width="680" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="role_b_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="role_b">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_b" value="Push &amp;lt;sha&amp;gt;-amd64 and &amp;lt;sha&amp;gt;-arm64, then the multi-arch index &amp;lt;sha&amp;gt;, to ECR of-api (tags immutable, scan on push).&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/ecr/of-api&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="1084" width="1060" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_b_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;" vertex="1" parent="act_b">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gate_b" value="deploy_enabled is off (ci/github-actions) and becomes the variable DEPLOY_ENABLED. The workflow Terraform commits pushes on every master push and never reads it; only an uncommitted local edit of the workflow does." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="1084" width="900" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wf_b" target="tok_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tok_b" target="sts_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="sts_b" target="role_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="role_b" target="act_b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_c" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-web: ci.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Push and pull request on master: lint, test and build; deploy on master." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1286" width="236" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_c_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="wf_c">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tok_c" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1299" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sts_c" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="acct">
+          <mxGeometry x="92" y="1195" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="role_c" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;innovate-inc-of-web-ci-role&lt;/font&gt;&lt;/b&gt; (global/frontend). Trust: sub for of-web, ref refs/heads/master. Rights: list, put and delete in &amp;lt;web-bucket&amp;gt;; CreateInvalidation and GetInvalidation on the distribution; put, get and list under &amp;lt;artifact-bucket&amp;gt;/production/of-web/." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="1182" width="680" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="role_c_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="role_c">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c" value="Build with the VITE_* values from Actions secrets, upload build_&amp;lt;sha&amp;gt;.tar.gz to &amp;lt;artifact-bucket&amp;gt;, sync &amp;lt;web-bucket&amp;gt; with index.html last, invalidate /* on CloudFront.&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;global/frontend&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="1182" width="1060" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_c_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;" vertex="1" parent="act_c">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gate_c" value="The workflow Terraform commits deploys on every master push. The local edit gates deploy on DEPLOY_ENABLED, which Terraform never writes on of-web, so that deploy job never runs." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="1182" width="900" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wf_c" target="tok_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tok_c" target="sts_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="sts_c" target="role_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="role_c" target="act_c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_d" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-helm: ci.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Push and pull request on master: helm lint and kubeconform. No AWS step." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1384" width="236" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_d_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="wf_d">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tok_d" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1397" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sts_d" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="acct">
+          <mxGeometry x="92" y="1293" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="role_d" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;prod01-us-of-helm-ci-role&lt;/font&gt;&lt;/b&gt; and &lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;prod01-usw2-of-helm-ci-role&lt;/font&gt;&lt;/b&gt; (ci/roles in each region): in code, but no workflow assumes them. Rights: eks:DescribeCluster; an EKS access entry with AmazonEKSEditPolicy in namespace of." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="1280" width="680" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="role_d_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="role_d">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_d" value="Chart publish to ECR helm-charts/of-api: designed (system/ecr/helm-charts), but no workflow step and no push right exist in code. Not built yet." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="1280" width="1060" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_d_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;" vertex="1" parent="act_d">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gate_d" value="None: the lint job runs on every push and pull request." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="1280" width="900" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="e3d_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wf_d" target="tok_d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3d_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tok_d" target="sts_d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3d_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="sts_d" target="role_d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3d_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="role_d" target="act_d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_e" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-load: ci.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Committed by system/ecr/of-load. Push and pull request on master: build amd64 and arm64." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1482" width="236" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="wf_e_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="wf_e">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tok_e" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.temporary_security_credential;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="318" y="1495" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sts_e" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sts;" vertex="1" parent="acct">
+          <mxGeometry x="92" y="1391" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="role_e" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;system-of-load-ci-role&lt;/font&gt;&lt;/b&gt; (system/ecr/of-load). Trust: sub for of-load, ref refs/heads/master. Rights: ecr:GetAuthorizationToken, push and pull on ECR of-load only." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="200" y="1378" width="680" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="role_e_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;dashed=0;" vertex="1" parent="role_e">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_e" value="Push &amp;lt;sha&amp;gt;-amd64 and &amp;lt;sha&amp;gt;-arm64, then the multi-arch index &amp;lt;sha&amp;gt;, to ECR of-load.&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;system/ecr/of-load&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="920" y="1378" width="1060" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="act_e_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;" vertex="1" parent="act_e">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gate_e" value="None beyond master: the workflow Terraform commits pushes on every master push." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="1378" width="900" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="e3e_0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wf_e" target="tok_e">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3e_1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tok_e" target="sts_e">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3e_2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="sts_e" target="role_e">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3e_3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.375;exitDx=0;exitDy=0;entryX=0.0;entryY=0.375;entryDx=0;entryDy=0;" edge="1" parent="1" source="role_e" target="act_e">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vault" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Outside this repository&lt;/font&gt;&lt;/b&gt;: the Vault JWT mount github-actions, the Vault roles opsfleet-plan and opsfleet-apply, both KV paths and the GitHub environment terraform." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="gate_a">
+          <mxGeometry x="12" y="50" width="876" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="settings" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Actions settings Terraform writes, names only&lt;/font&gt;&lt;/b&gt;&lt;br&gt;of-api: secrets AWS_ROLE_ARN, AWS_REGION, ECR_REPOSITORY (system/ecr/of-api); secret AWS_ROLE_ARN and variables AWS_REGION, DEPLOY_ENABLED, ECR_REPOSITORY (ci/github-actions in each region).&lt;br&gt;of-web: secrets AWS_ROLE_ARN, AWS_REGION, WEB_BUCKET, CLOUDFRONT_DISTRIBUTION_ID, ARTIFACT_BUCKET, ARTIFACT_PREFIX, SNYK_TOKEN and one per VITE_* build value (global/frontend).&lt;br&gt;of-helm: secret AWS_ROLE_ARN and variables AWS_REGION, DEPLOY_ENABLED, EKS_CLUSTER_NAME, K8S_NAMESPACE, ECR_REPOSITORY (ci/github-actions in each region; the us-west-2 stack runs only when applied by name).&lt;br&gt;of-load: secrets AWS_ROLE_ARN, AWS_REGION, ECR_REPOSITORY (system/ecr/of-load).&lt;br&gt;opsfleet: terraform.yml reads only the secret VAULT_ADDR, which no stack writes." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="1482" width="2880" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="launch" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-launch: deploy.yml&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Push to master or manual dispatch. Assumes the role in its OF_LAUNCH_CICD_ROLE secret through OIDC, pushes a linux/arm64 and linux/amd64 image to its ECR repository, uploads the bundle to its artifact bucket and deploys by CodeDeploy to one arm64 EC2 host. A separate infrastructure repository creates the role, the host and the CodeDeploy application." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1586" width="356" height="156" as="geometry" />
+        </mxCell>
+        <mxCell id="launch_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="launch">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e_disp" value="dispatches terraform.yml" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=0.6445;exitY=1.0;exitDx=0;exitDy=0;entryX=0.911;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="o0" target="wf_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_helm" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;GitHub of-helm&lt;/font&gt;&lt;/b&gt;&lt;br&gt;charts/of-api and charts/example-api on master." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="1774" width="256" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="gh_helm_i" value="" style="shape=mxgraph.weblogos.github;html=1;fillColor=#24292E;strokeColor=none;" vertex="1" parent="gh_helm">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="argo" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Argo CD&lt;/font&gt;&lt;/b&gt;, namespace argocd&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/cluster/eks/components: argocd, argocd-configuration&lt;/font&gt;&lt;br&gt;Repository Secret helm-repo: git over HTTPS with a username and read token from the sensitive variable helm_repo_credentials, whose value lives only in the git-ignored secrets file.&lt;br&gt;Sign-in: the built-in admin account with its generated initial secret; no SSO. UI at argocd.prod.innovate.example on the Ingress ALB, without a WAF." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="40" y="1656" width="640" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="apps" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;AppProject opsfleet&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;argocd-configuration; app-services/example-api&lt;/font&gt;&lt;br&gt;Destinations in this cluster: argocd, of, example-api, of-load.&lt;br&gt;Application of-api: charts/of-api into namespace of.&lt;br&gt;Application prod01-us-example-api: charts/example-api into namespace example-api.&lt;br&gt;Automated sync with prune and self-heal." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="740" y="1656" width="700" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="ctrl" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Controllers through EKS Pod Identity&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;prod01-us-east-1/cluster/eks/components&lt;/font&gt;&lt;br&gt;Karpenter, the EBS CSI driver, the AWS Load Balancer Controller and external-dns each assume their own IAM role; every role trusts pods.eks.amazonaws.com with sts:AssumeRole and sts:TagSession." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2020" y="1656" width="900" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ctrl_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="ctrl">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ofload" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-load&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;app-services/of-load; argocd-configuration&lt;/font&gt;&lt;br&gt;AppProject destination of-load; Application prod01-us-of-load: charts/of-load into namespace of-load. Automated sync with prune and self-heal." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1500" y="1656" width="460" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="pods" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;of-api pods&lt;/font&gt;&lt;/b&gt;, namespace of&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;of-helm: charts/of-api&lt;/font&gt;&lt;br&gt;Service account without annotations. SecretProviderClass &amp;lt;fullname&amp;gt;-db: provider aws, usePodIdentity on, object db.secretArn (CHANGEME)." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="740" y="1802" width="470" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="csi" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Secrets Store CSI driver&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#687078&quot;&gt;cluster/eks: add-on aws-secrets-store-csi-driver-provider&lt;/font&gt;&lt;br&gt;Mounts the secret read-only at /mnt/secrets and syncs Secret of-api-db (DB_USER, DB_PASSWORD)." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#FFFFFF;strokeColor=#879196;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1270" y="1802" width="470" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="podid" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Pod Identity association for of-api&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Not in code: no association exists for a service account in namespace of, so the mount fails and the pod does not start. Not built yet." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;align=left;spacingLeft=8;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="1800" y="1802" width="470" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="sm" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Secrets Manager&lt;/font&gt;&lt;/b&gt;&lt;br&gt;The database secret comes from the Aurora stack, kept out of the rollout: not built yet. The chart's db.secretArn is CHANGEME." style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;container=1;collapsible=0;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;align=left;spacingLeft=46;spacingTop=3;fontSize=11;" vertex="1" parent="acct">
+          <mxGeometry x="2330" y="1802" width="590" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="sm_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;" vertex="1" parent="sm">
+          <mxGeometry x="8" y="8" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_pull" value="pulls charts" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=0.0;exitY=0.4483;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="argo" target="gh_helm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_apply" value="applies" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.4483;exitDx=0;exitDy=0;entryX=0.0;entryY=0.4483;entryDx=0;entryDy=0;" edge="1" parent="1" source="argo" target="apps">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_load" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.4483;exitDx=0;exitDy=0;entryX=0.0;entryY=0.4483;entryDx=0;entryDy=0;" edge="1" parent="1" source="apps" target="ofload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_run" value="runs pods" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=0.3357;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="apps" target="pods">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="0" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4_mount" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pods" target="csi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_pid" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="csi" target="podid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_sm" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="podid" target="sm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="leg" value="&lt;b&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Legend&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AAB7B8;fontColor=#232F3E;fontSize=13;align=left;verticalAlign=top;spacingLeft=12;spacingTop=6;container=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2056" width="3340" height="186" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_b0" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;fillColor=#FFFFFF;strokeColor=#879196;" vertex="1" parent="leg">
+          <mxGeometry x="20" y="40" width="110" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_bt0" value="In code: the Terraform working tree, or the of-helm chart it deploys." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="146" y="40" width="700" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_b1" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;fillColor=#F7F7F7;strokeColor=#545B64;dashed=1;dashPattern=6 4;strokeWidth=1.5;" vertex="1" parent="leg">
+          <mxGeometry x="20" y="90" width="110" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_bt1" value="Designed but not in code, or in code but kept out of the rollout. Not built yet." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="146" y="90" width="700" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_b2" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fontColor=#232F3E;verticalAlign=top;spacingRight=6;fillColor=#FFFFFF;strokeColor=#545B64;dashed=1;dashPattern=1 2;strokeWidth=2;" vertex="1" parent="leg">
+          <mxGeometry x="20" y="140" width="110" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_bt2" value="Created by hand or by another repository, outside this Terraform." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="146" y="140" width="700" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_l0" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#DD344C;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;" edge="1" parent="leg">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="50" as="sourcePoint" />
+            <mxPoint x="1010" y="50" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_lt0" value="1 Developer" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="1026" y="38" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_l1" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#147EBA;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;" edge="1" parent="leg">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="78" as="sourcePoint" />
+            <mxPoint x="1010" y="78" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_lt1" value="2 Operator" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="1026" y="66" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_l2" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#ED7100;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;" edge="1" parent="leg">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="106" as="sourcePoint" />
+            <mxPoint x="1010" y="106" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_lt2" value="3 CI" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="1026" y="94" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_l3" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#8C4FFF;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;" edge="1" parent="leg">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="134" as="sourcePoint" />
+            <mxPoint x="1010" y="134" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_lt3" value="4 In cluster" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="1026" y="122" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_l4" value="" style="html=1;rounded=0;endArrow=block;endFill=1;endSize=6;strokeWidth=2.5;strokeColor=#545B64;fontSize=11;fontColor=#545B64;labelBackgroundColor=#FFFFFF;dashed=1;dashPattern=8 5;" edge="1" parent="leg">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="162" as="sourcePoint" />
+            <mxPoint x="1010" y="162" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg_lt4" value="A step that does not happen yet" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;fontSize=12;" vertex="1" parent="leg">
+          <mxGeometry x="1026" y="150" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="lg_facts" value="Every principal lives in the one account. The exception is of-launch, whose role a separate infrastructure repository creates.&lt;br&gt;Dashed MFA: required by the access design, not yet a condition in the deploy role's trust policy.&lt;br&gt;Numbers in circles give the order of the steps in a lane.&lt;br&gt;Angle brackets mark a site value kept out of this repository. Small grey text names the Terraform stack (path under terraform/)." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;verticalAlign=top;fontSize=13;spacingTop=2;" vertex="1" parent="leg">
+          <mxGeometry x="1380" y="36" width="1900" height="150" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

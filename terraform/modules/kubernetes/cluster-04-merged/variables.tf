@@ -1,12 +1,12 @@
 variable "environment" {
- type = string  
+  type = string
 }
 
 variable "application" {
- type = string  
+  type = string
 }
 variable "cluster_verison" {
-  type = string
+  type    = string
   default = "1.33"
 }
 
@@ -15,54 +15,54 @@ variable "vpc_id" {
 }
 
 variable "endpoint_private_access" {
-  type = bool
+  type        = bool
   description = " (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is false."
-  default = true
+  default     = true
 }
 variable "endpoint_public_access" {
-  type = bool
+  type        = bool
   description = "Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is true"
-  default = false
+  default     = false
 }
 variable "node_groups" {
   description = "List of node group maps, each describing a single node group configuration."
   type = list(object({
-    name                 = string
-    subnets              = list(string)
-    capacity_type        = string
-    instance_types       = list(string)
-    scaling              = object({
+    name           = string
+    subnets        = list(string)
+    capacity_type  = string
+    instance_types = list(string)
+    scaling = object({
       desired = number
       min     = number
       max     = number
     })
-    ami_type             = optional(string)
-    node_version         = optional(string)
+    ami_type                 = optional(string)
+    node_version             = optional(string)
     extra_security_group_ids = optional(list(string), [])
-    image_id             = optional(string)
-    ebs                  = optional(object({
+    image_id                 = optional(string)
+    ebs = optional(object({
       size       = number
       iops       = number
       throughput = number
       type       = string
     }))
-    labels               = optional(map(string))
-    taints               = optional(list(object({
+    labels = optional(map(string))
+    taints = optional(list(object({
       key    = string
       value  = string
       effect = string
     })), [])
-    tags                 = optional(map(string))
+    tags = optional(map(string))
   }))
 }
 
 
 
 variable "cluster_subnet_ids" {
- type = list(string)
+  type = list(string)
 }
 variable "extra_security_group_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -76,9 +76,9 @@ variable "rules_cidr" {
     cidrs     = list(string)
   }))
   default = [
-    { type = "ingress", from_port = 0,  to_port = 0,  protocol = "-1", cidrs = ["0.0.0.0/0"] },
+    { type = "ingress", from_port = 0, to_port = 0, protocol = "-1", cidrs = ["0.0.0.0/0"] },
     { type = "ingress", from_port = 22, to_port = 22, protocol = "tcp", cidrs = ["0.0.0.0/0"] },
-    { type = "egress",  from_port = 0,  to_port = 0,  protocol = "-1", cidrs = ["0.0.0.0/0"] }
+    { type = "egress", from_port = 0, to_port = 0, protocol = "-1", cidrs = ["0.0.0.0/0"] }
   ]
 }
 
@@ -104,19 +104,19 @@ variable "node_policy_template_vars" {
   default     = {}
 }
 variable "extra_cluster_policy_list" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
 variable "default_cluster_role_policy_list" {
-  type = list(string)
+  type        = list(string)
   description = "default cluster policy list"
   default = [
     "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
   ]
 }
 variable "default_ec2_role_policy_list" {
-  type = list(string)
+  type        = list(string)
   description = "default policy list"
   default = [
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
@@ -145,12 +145,12 @@ variable "node_group_timeouts" {
 }
 
 variable "update_default_version" {
- type = bool
- default = true
+  type    = bool
+  default = true
 }
 variable "device_name" {
- type = string
- default="/dev/xvda"
+  type    = string
+  default = "/dev/xvda"
 }
 variable "ebs" {
   type = object({
@@ -170,39 +170,39 @@ variable "ebs" {
 
 
 variable "image_id" {
- type = string
- default=null
+  type    = string
+  default = null
 }
 
 variable "capacity_reservation_preference" {
- type = string
- description = "open or none"
- default = "none"
+  type        = string
+  description = "open or none"
+  default     = "none"
 }
 
 variable "http_endpoint" {
- type = string
- default = "enabled"
+  type    = string
+  default = "enabled"
 }
 
 variable "http_tokens" {
- type = string 
- default = "required" 
+  type    = string
+  default = "required"
 }
 
 variable "http_put_response_hop_limit" {
- type = string
- default = 2
+  type    = string
+  default = 2
 }
 
 variable "http_protocol_ipv6" {
- type = string
- default = null
+  type    = string
+  default = null
 }
 
 variable "instance_metadata_tags" {
- type = string
- default = null
+  type    = string
+  default = null
 }
 
 variable "user_data" {

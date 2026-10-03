@@ -1,0 +1,2 @@
+applications: ${jsonencode(APPLICATIONS)}
+projects: ${jsonencode(PROJECTS)}

@@ -1,2 +1,5 @@
 #deploy order: one stack folder per line, relative to this tier
-backend
+of-api
+of-load
+frontend-web
+helm-charts

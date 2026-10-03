@@ -1,0 +1,47 @@
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire untagged images after 14 days",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": 14
+      },
+      "action": { "type": "expire" }
+    },
+    {
+      "rulePriority": 2,
+      "description": "Keep the newest 20 amd64 images",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPatternList": ["*-amd64"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 20
+      },
+      "action": { "type": "expire" }
+    },
+    {
+      "rulePriority": 3,
+      "description": "Keep the newest 20 arm64 images",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPatternList": ["*-arm64"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 20
+      },
+      "action": { "type": "expire" }
+    },
+    {
+      "rulePriority": 4,
+      "description": "Keep the newest 70 images overall",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "imageCountMoreThan",
+        "countNumber": 70
+      },
+      "action": { "type": "expire" }
+    }
+  ]
+}

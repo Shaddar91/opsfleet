@@ -1,26 +1,58 @@
 #!/usr/bin/env bash
-#tfctl.sh: runs a tier's ../init.sh + a terraform verb over the stacks listed in <tier>/stacks, in order.
+#tfctl.sh: system tiers only (buckets, zones, OIDC, key, ECR, GitHub repos, access). The environments have their own script: environments/innovate-inc/tfctl.sh.
 #roll, unroll, check and order walk every tier listed in ./rollout. ./tfctl.sh help prints the verbs.
 set -euo pipefail
 ((BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] >= 404)) || { echo "tfctl: needs bash 4.4 or newer" >&2; exit 1; }
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONF="${OPSFLEET_BACKEND_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/opsfleet/backend.env}"
+CONF="${OPSFLEET_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/opsfleet/${OPSFLEET_ACCOUNT:-personal}.env}"
+if [ -z "${STATE_BUCKET:-}" ] && [ -f "$CONF" ]; then . "$CONF"; fi
+: "${STATE_BUCKET:?set it in the environment or in $CONF}" "${STATE_BUCKET_REGION:?set it in the environment or in $CONF}" "${STATE_KEY_PREFIX:?set it in the environment or in $CONF}"
+export STATE_BUCKET STATE_BUCKET_REGION STATE_KEY_PREFIX
 BOOT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/opsfleet"
 IDS=()
 SCOPE=()
 APPROVE=()
-declare -A LISTED=() EMPTY=()
+declare -A LISTED=() EMPTY=() DURABLE=() DURABLE_ID=()
+FORCE_DURABLE=0
 
 usage() {
-  cat <<'EOF'
-usage: ./tfctl.sh <tier> validate|plan|apply|output|destroy|status [stack|all] [--from <stack>]
+  cat <<'USAGE'
+usage: ./tfctl.sh <tier> validate|plan|apply|output|destroy|status [stack|all] [--from <stack>] [--auto-approve] [--durable]
        ./tfctl.sh roll [--auto-approve] [--from <tier>/<stack>]
        ./tfctl.sh unroll [--auto-approve] [--from <tier>/<stack>]
        ./tfctl.sh check [--from <tier>/<stack>]
        ./tfctl.sh order
+A tier is a system folder with a stacks file (system/s3, system/r53, system/iam, system, system/ecr, system/github, system/access).
 Tiers run in rollout order and stacks in <tier>/stacks order; destroy and unroll run in reverse.
-EOF
+
+apply
+  one stack        ./tfctl.sh system/ecr apply of-api
+  a whole tier     ./tfctl.sh system/ecr apply all
+  from a stack on  ./tfctl.sh system/ecr apply all --from frontend-web
+  everything       ./tfctl.sh roll                   (add --auto-approve to skip the prompts)
+  resume a roll    ./tfctl.sh roll --from system/ecr/of-api
+destroy
+  one stack        ./tfctl.sh system/ecr destroy of-api
+  a whole tier     ./tfctl.sh system/ecr destroy all   (reverse order)
+  everything       ./tfctl.sh unroll                 (every system tier is listed in ./durable, so unroll keeps them all)
+  a durable tier   ./tfctl.sh system/ecr destroy all --durable   (refused without the flag)
+  a stack is refused while a later stack in the order still holds resources; destroy those first
+look before you touch
+  ./tfctl.sh order                                   roll order, then the destroy order
+  ./tfctl.sh <tier> status                           clean | drifted | not deployed, per stack
+  ./tfctl.sh <tier> plan all                         plans without applying
+USAGE
+}
+
+tips() {
+  local tier=${1:-<tier>}
+  cat >&2 <<TIPS
+tips: apply one     ./tfctl.sh $tier apply <stack>        destroy one   ./tfctl.sh $tier destroy <stack>
+      apply tier    ./tfctl.sh $tier apply all            destroy tier  ./tfctl.sh $tier destroy all
+      apply all     ./tfctl.sh roll                       destroy all   ./tfctl.sh unroll
+      ./tfctl.sh help for --from, --auto-approve and the guard on destroy
+TIPS
 }
 
 die() {
@@ -54,13 +86,24 @@ load_tier() {
     [[ -e $dir/$s/.bootstrap || -x $dir/init.sh ]] || die "$tier/$s needs an executable $tier/init.sh"
     LISTED[$tier/$s]=1
     IDS+=("$tier/$s")
+    if [[ -n ${DURABLE[$tier]:-} ]]; then DURABLE_ID[$tier/$s]=1; fi
   done < <(read_list "$dir/stacks")
+}
+
+load_durable() {
+  local t
+  [[ -f $ROOT/durable ]] || return 0
+  while IFS= read -r t; do
+    t=${t#./}
+    DURABLE[${t%/}]=1
+  done < <(read_list "$ROOT/durable")
 }
 
 load_rollout() {
   local t
   local -A seen=()
   [[ -f $ROOT/rollout ]] || die "no rollout file next to tfctl.sh"
+  load_durable
   while IFS= read -r t; do
     t=${t#./}
     t=${t%/}
@@ -97,12 +140,6 @@ label() {
 
 need_env() {
   command -v terraform >/dev/null || die "terraform is not on PATH"
-  if [[ -f $CONF ]]; then
-    #shellcheck source=/dev/null
-    . "$CONF"
-  fi
-  : "${STATE_BUCKET:?set STATE_BUCKET in the environment or in $CONF}"
-  export STATE_BUCKET
 }
 
 #in_stack ID MODE [ARGS...]: in a subshell, cd into ID, init it (MODE real|validate|quiet|none), then terraform ARGS
@@ -111,11 +148,13 @@ in_stack() (
   local -a init=(../init.sh)
   shift 2
   cd "$ROOT/$id" || exit
+  #one init per state bucket: switching accounts needs no -reconfigure, and a changed key in one account still stops init
+  export TF_DATA_DIR=".terraform/$STATE_BUCKET"
   if [[ -e .bootstrap ]]; then
-    export TF_VAR_state_bucket_name="$STATE_BUCKET"
-    init=(terraform init -reconfigure "-backend-config=path=$BOOT_STATE_DIR/${id//\//-}.tfstate")
+    export TF_VAR_state_bucket_name="$STATE_BUCKET" TF_VAR_region="${STATE_BUCKET_REGION:-us-east-1}"
+    init=(terraform init -reconfigure "-backend-config=path=$BOOT_STATE_DIR/$STATE_BUCKET/${id//\//-}.tfstate")
     if [[ $mode == validate ]]; then init=(terraform init); fi
-    if [[ $mode == real || $mode == quiet ]]; then (umask 077 && mkdir -p "$BOOT_STATE_DIR") || exit; fi
+    if [[ $mode == real || $mode == quiet ]]; then (umask 077 && mkdir -p "$BOOT_STATE_DIR/$STATE_BUCKET") || exit; fi
   fi
   if [[ $mode == validate ]]; then init+=(-backend=false); fi
   case $mode in
@@ -188,8 +227,9 @@ unlisted() {
 
 #walk VERB ACTION START STEP [RESUME]: ACTION on IDS[START], IDS[START+STEP], ... until the first failure
 walk() {
-  local verb=$1 action=$2 start=$3 step=$4 resume=${5:-} i n=0
-  if ((start >= 0 && start < ${#IDS[@]})); then need_env; fi
+  local verb=$1 action=$2 start=$3 step=$4 resume=${5:-} i n=0 net=online
+  if [[ $verb == check || $verb == validate ]]; then net=offline; fi
+  if ((start >= 0 && start < ${#IDS[@]})); then need_env "$net"; fi
   for ((i = start; i >= 0 && i < ${#IDS[@]}; i += step)); do
     if ! "$action" "${IDS[i]}"; then
       printf 'tfctl: %s failed at %s\n' "$verb" "${IDS[i]}" >&2
@@ -202,7 +242,7 @@ walk() {
 }
 
 cmd_global() {
-  local cmd=$1 from="" start id resume
+  local cmd=$1 from="" start id resume i
   shift
   while (($#)); do
     case $1 in
@@ -219,9 +259,18 @@ cmd_global() {
   done
   load_rollout
   if [[ $cmd == order ]]; then
-    for id in "${IDS[@]}"; do label "$id"; done
-    printf 'tfctl: %d stack(s) in roll order\n' "${#IDS[@]}" >&2
+    printf 'roll (apply), first to last:\n'
+    for id in "${IDS[@]}"; do if [[ -n ${DURABLE_ID[$id]:-} ]]; then printf '  %s (durable)\n' "$(label "$id")"; else printf '  %s\n' "$(label "$id")"; fi; done
+    printf 'unroll (destroy), last to first, durable tiers kept:\n'
+    for ((i = ${#IDS[@]} - 1; i >= 0; i--)); do [[ -n ${DURABLE_ID[${IDS[i]}]:-} ]] || printf '  %s\n' "$(label "${IDS[i]}")"; done
+    printf 'tfctl: %d stack(s), %d durable\n' "${#IDS[@]}" "${#DURABLE_ID[@]}" >&2
+    tips system/ecr
     return
+  fi
+  if [[ $cmd == unroll ]]; then
+    local -a kept=()
+    for id in "${IDS[@]}"; do [[ -n ${DURABLE_ID[$id]:-} ]] || kept+=("$id"); done
+    IDS=("${kept[@]}")
   fi
   SCOPE=("${IDS[@]}")
   start=0
@@ -250,6 +299,12 @@ cmd_tier() {
         (($# >= 2)) || bad_usage "--from needs a stack name"
         from=$2
         shift ;;
+      --auto-approve)
+        [[ $verb == apply || $verb == destroy ]] || bad_usage "$verb takes no --auto-approve"
+        APPROVE=(-auto-approve -input=false) ;;
+      --durable)
+        [[ $verb == destroy ]] || bad_usage "--durable applies to destroy"
+        FORCE_DURABLE=1 ;;
       -*) bad_usage "unknown option '$1'" ;;
       *)
         [[ -z $target ]] || bad_usage "one stack or all, not both '$target' and '$1'"
@@ -259,7 +314,9 @@ cmd_tier() {
   done
   if [[ $verb == destroy ]] && in_rollout "$tier"; then
     load_rollout
-    SCOPE=("${IDS[@]}")
+    if [[ -n ${DURABLE[$tier]:-} && $FORCE_DURABLE == 0 ]]; then die "$tier is durable (./durable): unroll keeps it; add --durable to destroy it anyway"; fi
+    SCOPE=()
+    for id in "${IDS[@]}"; do [[ -n ${DURABLE_ID[$id]:-} && ${id%/*} != "$tier" ]] || SCOPE+=("$id"); done
     IDS=()
     for id in "${SCOPE[@]}"; do
       if [[ ${id%/*} == "$tier" ]]; then IDS+=("$id"); fi
@@ -276,9 +333,10 @@ cmd_tier() {
   start=0
   if [[ $verb == destroy ]]; then start=$((${#IDS[@]} - 1)); fi
   if [[ -n $from ]]; then start=$(index_of "$tier/${from#"$tier"/}") || die "$tier/stacks does not list '$from'"; fi
-  if [[ -z $target || $target == all ]]; then resume="./tfctl.sh $tier $verb all"; fi
+  if [[ -z $target || $target == all ]]; then resume="./tfctl.sh $tier $verb all"; if ((${#APPROVE[@]})); then resume+=" --auto-approve"; fi; fi
   if [[ $verb == status ]]; then unlisted "$tier"; fi
   if [[ $verb == destroy ]]; then walk destroy act_destroy "$start" -1 "$resume"; else walk "$verb" "act_$verb" "$start" 1 "$resume"; fi
+  if [[ $verb == status || $verb == plan ]]; then tips "$tier"; fi
 }
 
 main() {

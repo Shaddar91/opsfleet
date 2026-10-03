@@ -1,0 +1,5 @@
+#deploy order: one stack folder per line, relative to this tier
+network
+#aurora   kept out on purpose: not to be deployed yet
+edge
+internal-alb

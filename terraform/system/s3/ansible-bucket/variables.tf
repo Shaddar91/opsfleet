@@ -6,7 +6,6 @@ variable "ansible_bucket_name" {
 variable "force_destroy" {
   description = "Let destroy delete the bucket while it still holds objects; a change takes effect only after an apply"
   type        = bool
-  default     = true
 }
 
 variable "noncurrent_days" {

@@ -1,0 +1,125 @@
+#Terraform for one stack, started by hand: plan on the default branch, then, with apply ticked, apply in the terraform environment once approved.
+#Logs carry only resource addresses and totals.
+name: terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: Tier as tfctl.sh names it; system/... runs terraform/tfctl.sh, anything else environments/innovate-inc/tfctl.sh
+        required: true
+        type: string
+      stack:
+        description: Stack folder inside the tier
+        required: true
+        type: string
+      apply:
+        description: Apply after the plan, once the terraform environment is approved
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ inputs.tier }}-${{ inputs.stack }}
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+  TF_CLI_ARGS: -no-color
+  TIER: ${{ inputs.tier }}
+  STACK: ${{ inputs.stack }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.0
+          terraform_wrapper: false
+      - name: Export the values every stack needs
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: jwt
+          path: github-actions
+          role: opsfleet-plan
+          secrets: secret/data/opsfleet/common **
+      - name: Export this stack's own values, when it has any
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: jwt
+          path: github-actions
+          role: opsfleet-plan
+          ignoreNotFound: true
+          secrets: secret/data/opsfleet/stacks/${{ inputs.tier }}/${{ inputs.stack }} **
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ env.OPSFLEET_ACCOUNT_ID }}:role/opsfleet-terraform-plan-role
+          aws-region: ${{ env.STATE_BUCKET_REGION }}
+      - name: Plan, addresses and totals only
+        run: |
+          if [[ $TIER == system* ]]; then cd terraform; else cd terraform/environments/innovate-inc; fi
+          status=0
+          ./tfctl.sh "$TIER" plan "$STACK" > "$RUNNER_TEMP/plan.log" 2>&1 || status=$?
+          grep -E '^\s+# .* (will|must) be |^Plan: |^No changes\.' "$RUNNER_TEMP/plan.log" | tee -a "$GITHUB_STEP_SUMMARY" || true
+          grep -A4 'Error:' "$RUNNER_TEMP/plan.log" || true
+          exit "$status"
+
+  apply:
+    needs: plan
+    if: inputs.apply
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: terraform
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.0
+          terraform_wrapper: false
+      - name: Export the values every stack needs
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: jwt
+          path: github-actions
+          role: opsfleet-apply
+          secrets: secret/data/opsfleet/common **
+      - name: Export this stack's own values, when it has any
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: jwt
+          path: github-actions
+          role: opsfleet-apply
+          ignoreNotFound: true
+          secrets: secret/data/opsfleet/stacks/${{ inputs.tier }}/${{ inputs.stack }} **
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ env.OPSFLEET_ACCOUNT_ID }}:role/opsfleet-terraform-apply-role
+          aws-region: ${{ env.STATE_BUCKET_REGION }}
+      - name: Apply, totals only
+        run: |
+          if [[ $TIER == system* ]]; then cd terraform; else cd terraform/environments/innovate-inc; fi
+          status=0
+          ./tfctl.sh "$TIER" apply "$STACK" --auto-approve > "$RUNNER_TEMP/apply.log" 2>&1 || status=$?
+          grep -E '^Apply complete!|^No changes\.' "$RUNNER_TEMP/apply.log" | tee -a "$GITHUB_STEP_SUMMARY" || true
+          grep -A4 'Error:' "$RUNNER_TEMP/apply.log" || true
+          exit "$status"

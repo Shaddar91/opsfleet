@@ -77,3 +77,9 @@ variable "user_data" {
   default     = null
   description = "Rendered user-data; a change replaces the instance"
 }
+
+variable "spot" {
+  type        = bool
+  default     = false
+  description = "Run as a persistent Spot Instance at the current Spot price, capped at On-Demand; a change replaces the instance"
+}

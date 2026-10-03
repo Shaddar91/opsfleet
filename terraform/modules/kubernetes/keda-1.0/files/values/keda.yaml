@@ -1,0 +1,35 @@
+serviceAccount:
+  operator:
+    name: ${SERVICE_ACCOUNT}
+
+operator:
+  replicaCount: 1
+
+metricsServer:
+  replicaCount: 1
+
+webhooks:
+  replicaCount: 1
+
+resources:
+  operator:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  metricServer:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  webhooks:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi

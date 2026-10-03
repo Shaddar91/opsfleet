@@ -2,6 +2,10 @@ provider "aws" {
   region = var.region
 }
 
+provider "github" {
+  owner = var.github_owner
+}
+
 terraform {
   required_version = "1.16.0"
   required_providers {
@@ -9,10 +13,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.66.0"
     }
+    github = {
+      source  = "integrations/github"
+      version = "6.13.0"
+    }
   }
   backend "s3" {
     bucket                      = "${STATE_BUCKET}"
-    key                         = "terraform/system/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
+    key                         = "${STATE_KEY_PREFIX}/system/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
     region                      = "${STATE_BUCKET_REGION}"
     encrypt                     = true
     skip_metadata_api_check     = true
@@ -24,4 +32,10 @@ terraform {
 variable "region" {
   type    = string
   default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_key_prefix    = "${STATE_KEY_PREFIX}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
 }

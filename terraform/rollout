@@ -1,11 +1,8 @@
-#tier deploy order; later plans insert their tiers
+#system tiers only; the innovate-inc environment has its own script: environments/innovate-inc/tfctl.sh
 system/s3
 system/r53
 system/iam
 system
-system/ecr
 system/github
-environments/prod01-us
-environments/prod01-us/cluster
-environments/prod01-us/cluster/eks/components
-environments/prod01-us/ci
+system/ecr
+system/access

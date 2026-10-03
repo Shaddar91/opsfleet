@@ -5,9 +5,9 @@ resource "aws_eks_node_group" "main" {
   node_group_name = each.value.name
   node_role_arn   = module.ec2_role.role_arn
 
-  capacity_type   = each.value.capacity_type
-  subnet_ids      = each.value.subnets
-  instance_types  = each.value.instance_types
+  capacity_type  = each.value.capacity_type
+  subnet_ids     = each.value.subnets
+  instance_types = each.value.instance_types
 
   scaling_config {
     desired_size = each.value.scaling.desired
@@ -15,11 +15,11 @@ resource "aws_eks_node_group" "main" {
     min_size     = each.value.scaling.min
   }
 
-  ami_type   = try(each.value.ami_type, null)
-  version    = try(each.value.node_version, null)
-  labels     = try(each.value.labels, null)
-  tags       = merge({
-    "k8s.io/cluster-autoscaler/enabled"               = "true"
+  ami_type = try(each.value.ami_type, null)
+  version  = try(each.value.node_version, null)
+  labels   = try(each.value.labels, null)
+  tags = merge({
+    "k8s.io/cluster-autoscaler/enabled"                      = "true"
     "k8s.io/cluster-autoscaler/${aws_eks_cluster.main.name}" = "owned"
     "kubernetes.io/cluster/${aws_eks_cluster.main.name}"     = "owned"
 
@@ -42,10 +42,10 @@ resource "aws_eks_node_group" "main" {
 }
 
 resource "aws_launch_template" "main" {
-  for_each                = { for ng in var.node_groups : ng.name => ng }
-  name                    = "${var.environment}-${var.application}-${each.key}-lt"
-  update_default_version  = true
-  user_data               = base64encode(templatefile(var.user_data, merge(var.user_data_vars, {
+  for_each               = { for ng in var.node_groups : ng.name => ng }
+  name                   = "${var.environment}-${var.application}-${each.key}-lt"
+  update_default_version = true
+  user_data = base64encode(templatefile(var.user_data, merge(var.user_data_vars, {
     NODE_GROUP_NAME = each.key
     CAPACITY_TYPE   = each.value.capacity_type
     ENVIRONMENT     = var.environment

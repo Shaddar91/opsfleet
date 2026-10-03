@@ -1,14 +1,3 @@
-locals {
-  origin_id                  = "origin-website.${var.domain}"
-  name                       = replace("${var.environment}-${var.domain}", ".", "-")
-  response_headers_policy_id = var.security_headers != null ? one(aws_cloudfront_response_headers_policy.main[*].id) : var.response_headers_policy_id
-
-  tags = {
-    Environment = var.environment
-    Terraform   = "true"
-  }
-}
-
 resource "aws_cloudfront_origin_access_control" "main" {
   count                             = var.origin_type == "s3-oac" ? 1 : 0
   name                              = substr(local.name, 0, 64)

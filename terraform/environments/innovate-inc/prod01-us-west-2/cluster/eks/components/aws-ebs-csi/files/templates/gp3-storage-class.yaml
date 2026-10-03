@@ -1,0 +1,16 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ${jsonencode(NAME)}
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  csi.storage.k8s.io/fstype: ${jsonencode(FSTYPE)}
+  encrypted: "true"
+  iops: ${jsonencode(tostring(IOPS))}
+  throughput: ${jsonencode(tostring(THROUGHPUT))}

@@ -8,10 +8,11 @@ module "cluster_role" {
 
 module "ec2_role" {
   source        = "../../iam/role/"
-  environment   = var.environment
-  application   = "${var.application}-ec2"
-  aws_service   = "ec2.amazonaws.com"
   custom_policy = true
+
+  environment = var.environment
+  application = "${var.application}-ec2"
+  aws_service = "ec2.amazonaws.com"
   policy_file = templatefile(
     var.node_policy_file_location,
     var.node_policy_template_vars
@@ -19,30 +20,9 @@ module "ec2_role" {
   policy_list = concat(var.default_ec2_role_policy_list, var.extra_ec2_policy_list)
 }
 
-data "aws_iam_policy_document" "eks_kubectl_connection" {
-  statement {
-    actions   = ["eks:ListClusters"]
-    effect    = "Allow"
-    resources = ["*"]
-  }
-  statement {
-    actions   = ["eks:AccessKubernetesApi", "eks:DescribeCluster"]
-    effect    = "Allow"
-    resources = [aws_eks_cluster.main.arn]
-  }
-}
 resource "aws_iam_policy" "eks_kubectl_connection" {
   policy = data.aws_iam_policy_document.eks_kubectl_connection.json
   name   = "${var.environment}-${var.application}-eks-kubectl-connection"
-}
-
-data "aws_iam_policy_document" "ec2_instance_connect" {
-  statement {
-    actions = ["ec2-instance-connect:SendSSHPublicKey"]
-    effect  = "Allow"
-
-    resources = ["*"]
-  }
 }
 
 resource "aws_iam_policy" "ec2_instance_connect_policy" {

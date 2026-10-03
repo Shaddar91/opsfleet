@@ -3,7 +3,7 @@ resource "aws_iam_role" "main" {
   force_detach_policies = true
   assume_role_policy = var.assume_role_policy == null ? templatefile(
     "${path.module}/files/assume_role.json",
-    { service = var.aws_service }
+    { SERVICE = var.aws_service }
   ) : var.assume_role_policy
   tags = {
     Name = var.name == null ? "${var.environment}-${var.application}-role" : "${var.name}-role"

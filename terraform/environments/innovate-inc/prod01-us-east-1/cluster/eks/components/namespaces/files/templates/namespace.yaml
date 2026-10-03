@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${jsonencode(NAME)}
+%{ if length(LABELS) > 0 ~}
+  labels:
+%{ for key, value in LABELS ~}
+    ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ endif ~}
+%{ if length(ANNOTATIONS) > 0 ~}
+  annotations:
+%{ for key, value in ANNOTATIONS ~}
+    ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ endif ~}

@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+%{ if length(SECRET_ARNS) > 0 ~}
+    {
+      "Sid": "ReadAuthSecrets",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": ${jsonencode(SECRET_ARNS)}
+    },
+    {
+      "Sid": "DecryptAuthSecrets",
+      "Effect": "Allow",
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "secretsmanager.${REGION}.amazonaws.com"
+        }
+      }
+    }${length(DB_USER_ARNS) > 0 ? "," : ""}
+%{ endif ~}
+%{ if length(DB_USER_ARNS) > 0 ~}
+    {
+      "Sid": "ConnectAsDatabaseUsers",
+      "Effect": "Allow",
+      "Action": "rds-db:connect",
+      "Resource": ${jsonencode(DB_USER_ARNS)}
+    }
+%{ endif ~}
+  ]
+}

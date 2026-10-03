@@ -2,6 +2,10 @@ provider "aws" {
   region = var.region
 }
 
+provider "github" {
+  owner = var.github_owner
+}
+
 terraform {
   required_version = "1.16.0"
   required_providers {
@@ -9,10 +13,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.66.0"
     }
+    github = {
+      source  = "integrations/github"
+      version = "6.13.0"
+    }
   }
   backend "s3" {
     bucket                      = "${STATE_BUCKET}"
-    key                         = "terraform/system/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
+    key                         = "${STATE_KEY_PREFIX}/system/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
     region                      = "${STATE_BUCKET_REGION}"
     encrypt                     = true
     skip_metadata_api_check     = true
@@ -24,4 +32,20 @@ terraform {
 variable "region" {
   type    = string
   default = "${REGION}"
+}
+
+data "terraform_remote_state" "github_oidc" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/iam/github-oidc/github-oidc.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  github_oidc_provider_arn = data.terraform_remote_state.github_oidc.outputs.provider_arn
 }

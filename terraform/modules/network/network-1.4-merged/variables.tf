@@ -1,7 +1,3 @@
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
 variable "application" {
   type    = string
   default = null
@@ -12,7 +8,7 @@ variable "environment" {
   default = null
 }
 variable "instance_type" {
-  type = string
+  type    = string
   default = "t2.micro"
 }
 variable "bastion_ami" {

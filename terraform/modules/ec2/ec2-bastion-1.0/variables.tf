@@ -5,7 +5,7 @@ variable "environment" {
   type = string
 }
 variable "ami" {
-  type    = string
+  type        = string
   description = "AMI id for the instance"
 }
 variable "size" {
