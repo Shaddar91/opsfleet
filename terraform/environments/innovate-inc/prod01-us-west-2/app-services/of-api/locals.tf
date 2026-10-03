@@ -1,0 +1,5 @@
+locals {
+  argo_application = "${path.module}/argo/application.yaml"
+  fqdn             = "${var.subdomain}.${trimsuffix(data.aws_route53_zone.service.name, ".")}"
+  web_origin       = "https://${var.web_subdomain}.${local.public_zone_domain_name}"
+}

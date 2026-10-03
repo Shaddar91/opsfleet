@@ -30,3 +30,9 @@ variable "skip_final_snapshot" {
   description = "Delete without a final snapshot"
   type        = bool
 }
+
+variable "aurora_master_password" {
+  description = "Master user password of the global database, written to this region's master user secret; valued in the tier's secrets.auto.tfvars"
+  type        = string
+  sensitive   = true
+}

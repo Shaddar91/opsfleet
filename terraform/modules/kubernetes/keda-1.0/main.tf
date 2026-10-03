@@ -1,4 +1,4 @@
-#KEDA: scales a Deployment on the ALB requests per minute of its target group; the per-app part is a ScaledObject in the app chart (example-api keda-scaledobject.yaml).
+#KEDA: scales a Deployment on the ALB requests per minute of its target group; the per-app part is a ScaledObject in the app chart (of-api keda-scaledobject.yaml).
 
 resource "helm_release" "keda" {
   name             = "keda"

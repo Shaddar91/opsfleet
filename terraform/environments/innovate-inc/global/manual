@@ -1,2 +1,0 @@
-#stacks roll, unroll, apply all and destroy all skip; they run only by name: ./tfctl.sh global apply frontend
-frontend

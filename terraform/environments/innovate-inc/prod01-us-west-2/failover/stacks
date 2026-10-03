@@ -1,0 +1,2 @@
+#deploy order: one stack folder per line, relative to this tier; the failover function needs both regions' aurora and edge states
+lambda-regional-failover

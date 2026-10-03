@@ -9,7 +9,7 @@ variable "waf_rate_limit" {
 }
 
 variable "enable_deletion_protection" {
-  description = "Block ALB deletion; false lets tfctl.sh unroll remove it"
+  description = "Block ALB deletion; false lets tfctl.sh destroy remove it"
   type        = bool
 }
 
@@ -24,7 +24,7 @@ variable "log_expire_days" {
 }
 
 variable "log_bucket_force_destroy" {
-  description = "Let destroy delete the log bucket while it still holds logs, so tfctl.sh unroll can remove it; a change takes effect only after an apply"
+  description = "Let destroy delete the log bucket while it still holds logs, so tfctl.sh destroy can remove it; a change takes effect only after an apply"
   type        = bool
 }
 

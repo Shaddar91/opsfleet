@@ -32,3 +32,13 @@ variable "addon_versions" {
     error_message = "addon_versions keys must be vpc-cni, kube-proxy, eks-pod-identity-agent, coredns or aws-secrets-store-csi-driver-provider."
   }
 }
+
+variable "admin_principal_arns" {
+  description = "IAM users or roles, besides the Terraform runner, that get AmazonEKSClusterAdminPolicy on the cluster; the owner's ARNs go in the tier's git-ignored secrets.auto.tfvars, which overrides the empty list in terraform.tfvars"
+  type        = list(string)
+
+  validation {
+    condition     = alltrue([for a in var.admin_principal_arns : can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:(role|user)/.+", a))])
+    error_message = "admin_principal_arns takes IAM role or user ARNs only; EKS access entries do not accept the root user."
+  }
+}

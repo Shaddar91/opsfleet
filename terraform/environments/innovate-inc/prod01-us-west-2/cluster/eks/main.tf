@@ -29,6 +29,12 @@ module "eks" {
       }
     } },
     { karpenter = { principal_arn = module.karpenter_node_role.role_arn, type = "EC2_LINUX" } },
+    { for arn in var.admin_principal_arns : "admin-${element(split("/", arn), length(split("/", arn)) - 1)}" => {
+      principal_arn = arn
+      policy_associations = {
+        admin = { policy_arn = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy" }
+      }
+    } },
   )
 
   addons = {

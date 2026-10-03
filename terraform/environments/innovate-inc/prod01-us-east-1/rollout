@@ -1,0 +1,5 @@
+#tier apply order, relative to this region; destroy walks it bottom to top. ci is not here on purpose: run its stacks by hand.
+.
+cluster
+cluster/eks/components
+app-services

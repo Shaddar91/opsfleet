@@ -1,5 +1,0 @@
-apiVersion: v2
-name: example-api
-description: Example service chart
-type: application
-version: 0.1.0

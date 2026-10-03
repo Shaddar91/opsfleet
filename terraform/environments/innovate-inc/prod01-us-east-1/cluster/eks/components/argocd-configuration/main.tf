@@ -1,4 +1,4 @@
-#Argo CD configuration, applied once Argo CD runs: the of-helm repository credential, then the AppProjects and Applications through argocd-apps.
+#Argo CD configuration, applied once Argo CD runs: the credential for the of-helm repository, then the AppProjects and Applications through argocd-apps. Every region ties to that same repository.
 
 resource "kubernetes_secret_v1" "helm_repo" {
   metadata {

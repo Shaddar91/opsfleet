@@ -1,0 +1,17 @@
+application                = "of-api"
+subdomain                  = "api"
+container_port             = 8000
+health_check_path          = "/healthz"
+priority                   = 10
+create_certificate         = true
+create_security_group_rule = true
+namespace                  = "of-api"
+architecture               = "amd64"
+argocd_namespace           = "argocd"
+git_repository             = "of-helm"
+git_branch                 = "master"
+git_path                   = "charts/of-api"
+argocd_project             = "opsfleet"
+web_subdomain              = "web"
+token_ttl_seconds          = 3600
+seed_user                  = "demo"

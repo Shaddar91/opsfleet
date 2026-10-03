@@ -1,6 +1,6 @@
 application                   = "frontend"
 web_subdomain                 = "web"
-api_subdomain                 = "app"
+api_subdomain                 = "api"
 load_subdomain                = "load"
 force_destroy                 = true
 web_noncurrent_days           = 7

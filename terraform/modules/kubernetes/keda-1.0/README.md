@@ -4,7 +4,7 @@ KEDA scales a Deployment on the requests per minute its ALB target group receive
 
 Cluster side, this module: the keda Helm release in the `keda` namespace and an operator role with read-only CloudWatch (`files/policies/keda-cloudwatch.json`), bound by EKS Pod Identity. Nothing per app lives here.
 
-App side, the example in the example-api chart (`templates/keda-scaledobject.yaml`), switched on with these values:
+App side, the example in the of-api chart (`templates/keda-scaledobject.yaml`), switched on with these values:
 
 ```yaml
 autoscaling:

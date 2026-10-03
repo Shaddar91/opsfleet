@@ -14,6 +14,6 @@ variable "ingress_rule_priority" {
 }
 
 variable "enable_deletion_protection" {
-  description = "Block ALB deletion; false lets tfctl.sh unroll remove it"
+  description = "Block ALB deletion; false lets tfctl.sh destroy remove it"
   type        = bool
 }

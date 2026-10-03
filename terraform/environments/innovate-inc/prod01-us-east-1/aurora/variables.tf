@@ -3,6 +3,11 @@ variable "application" {
   type        = string
 }
 
+variable "create_global_cluster" {
+  description = "Wrap the cluster into the global database the us-west-2 stack joins; needs instance_class db.r6g.large or larger"
+  type        = bool
+}
+
 variable "engine_version" {
   description = "Aurora PostgreSQL engine version at creation; the parameter group family follows it"
   type        = string
@@ -27,13 +32,14 @@ variable "database_name" {
 }
 
 variable "master_username" {
-  description = "Master username; the module generates its password and keeps both in the master user secret"
+  description = "Master username, kept with the password in the master user secret"
   type        = string
 }
 
-variable "master_user_secret_replica_regions" {
-  description = "Regions the master user secret is replicated to"
-  type        = list(string)
+variable "aurora_master_password" {
+  description = "Master user password, set on the cluster and written to the master user secret; valued in the tier's secrets.auto.tfvars"
+  type        = string
+  sensitive   = true
 }
 
 variable "deletion_protection" {

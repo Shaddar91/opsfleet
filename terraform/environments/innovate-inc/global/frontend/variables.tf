@@ -34,7 +34,7 @@ variable "log_bucket_name" {
 }
 
 variable "force_destroy" {
-  description = "Let destroy delete the site and log buckets while they still hold objects, so tfctl.sh unroll can remove them; a change takes effect only after an apply"
+  description = "Let destroy delete the site and log buckets while they still hold objects, so terraform destroy can remove them; a change takes effect only after an apply"
   type        = bool
 }
 

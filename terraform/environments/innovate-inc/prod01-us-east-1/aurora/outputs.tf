@@ -1,10 +1,20 @@
-output "master_user_secret_arn" {
-  description = "the chart's db.secretArn; the pod's service account needs secretsmanager:GetSecretValue on it, pod identity or IRSA, wired in the components tier"
-  value       = module.aurora.master_user_secret_arn
+output "database_secret_arn" {
+  description = "Database secret the backends read by Pod Identity and the proxy authenticates with"
+  value       = module.database_secret.arn
+}
+
+output "database_secret_name" {
+  description = "Database secret name, the chart's secrets.db.name"
+  value       = module.database_secret.name
+}
+
+output "master_username" {
+  description = "Master username, the username a secondary region's secret carries"
+  value       = var.master_username
 }
 
 output "writer_endpoint" {
-  description = "Writer endpoint hostname, the chart's DB_HOST"
+  description = "Writer endpoint hostname; the API connects through pool_internal_fqdn"
   value       = module.aurora.endpoint
 }
 
@@ -53,7 +63,22 @@ output "reader_endpoint" {
   value       = module.aurora.reader_endpoint
 }
 
-output "master_user_secret_replica_arns" {
-  description = "Master user secret replica ARNs by region, the db.secretArn of a chart in that region"
-  value       = module.aurora.master_user_secret_replica_arns
+output "global_cluster_arn" {
+  description = "Global database ARN, the resource the regional failover Lambda promotes within"
+  value       = module.aurora.global_cluster_arn
+}
+
+output "pool_endpoint" {
+  description = "RDS Proxy endpoint hostname"
+  value       = module.pool.endpoint
+}
+
+output "pool_internal_fqdn" {
+  description = "Internal name of the RDS Proxy, the chart's DB_HOST"
+  value       = module.pool.internal_records["pool"].fqdn
+}
+
+output "internal_records" {
+  description = "Internal CNAMEs by key (primary: writer, ro: reader, pool: proxy) as { name, fqdn }"
+  value       = merge(module.aurora.internal_records, module.pool.internal_records)
 }

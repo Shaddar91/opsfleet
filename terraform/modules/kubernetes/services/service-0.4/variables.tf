@@ -203,3 +203,9 @@ variable "target_group_binding_path" {
   default     = null
   description = "Path of the stack's TargetGroupBinding template, filled with NAME, NAMESPACE, TARGET_GROUP_ARN, SERVICE_NAME and SERVICE_PORT; with custom_target_group_binding"
 }
+
+variable "image_repository" {
+  type        = string
+  default     = null
+  description = "Image repository the Application sets as image.repository, the ECR repository URL from the ecr stack state; the chart ships the value empty"
+}

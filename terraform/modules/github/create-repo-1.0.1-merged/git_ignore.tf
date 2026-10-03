@@ -11,5 +11,10 @@ resource "github_repository_file" "canonical_gitignore" {
   commit_email        = var.commit_email
   overwrite_on_create = var.overwrite_on_create
 
+  #per-repo lines appended below the canonical block stay; the file is seeded once
+  lifecycle {
+    ignore_changes = [content]
+  }
+
   depends_on = [github_branch_default.main, github_branch.extra]
 }

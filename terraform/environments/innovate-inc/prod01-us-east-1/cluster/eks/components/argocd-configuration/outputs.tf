@@ -1,5 +1,5 @@
 output "repository_url" {
-  description = "Git repository Argo CD is tied to"
+  description = "The of-helm repository Argo CD is tied to"
   value       = local.helm_repo_url
 }
 

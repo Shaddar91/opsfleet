@@ -8,3 +8,4 @@ addon_versions = {
   coredns                               = "v1.14.6-eksbuild.4"
   aws-secrets-store-csi-driver-provider = "v3.1.4-eksbuild.1"
 }
+admin_principal_arns = []

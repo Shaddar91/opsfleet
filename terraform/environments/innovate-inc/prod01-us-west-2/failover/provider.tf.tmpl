@@ -1,0 +1,66 @@
+provider "aws" {
+  region = var.region
+}
+
+provider "github" {
+  owner = var.github_owner
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "2.8.1"
+    }
+    github = {
+      source  = "integrations/github"
+      version = "6.13.0"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+locals {
+  state_bucket        = "${STATE_BUCKET}"
+  state_key_prefix    = "${STATE_KEY_PREFIX}"
+  state_bucket_region = "${STATE_BUCKET_REGION}"
+}
+
+data "terraform_remote_state" "public_zone" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/system/r53/opsfleet/opsfleet.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  public_zone_id           = data.terraform_remote_state.public_zone.outputs.zone_id
+  public_zone_name_servers = data.terraform_remote_state.public_zone.outputs.name_servers
+  public_zone_domain_name  = data.terraform_remote_state.public_zone.outputs.domain_name
+  public_zone_arn          = data.terraform_remote_state.public_zone.outputs.arn
+  internal_zone_id          = data.terraform_remote_state.public_zone.outputs.internal_zone_id
+  internal_zone_domain_name = data.terraform_remote_state.public_zone.outputs.internal_domain_name
+}

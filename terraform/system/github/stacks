@@ -2,3 +2,5 @@
 of-web
 of-api
 of-helm
+of-failover
+of-load

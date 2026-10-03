@@ -6,7 +6,7 @@ module "repo" {
 
   project_name             = var.project_name
   project_description      = "Minimal stateless Flask API with multi-arch (amd64, arm64) image CI"
-  visibility               = "private"
+  visibility               = "public"
   default_branch           = "master"
   enable_branch_protection = var.enable_branch_protection
 }

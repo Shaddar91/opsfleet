@@ -1,0 +1,9 @@
+region              = "us-west-2"
+image_tag           = "246d5db726fd1f58e12ed5486b1b6084f72ec54f"
+primary_environment = "prod01-us"
+primary_region      = "us-east-1"
+standby_environment = "prod01-usw2"
+standby_region      = "us-west-2"
+on_alarm            = "status"
+timeout             = 900
+memory_size         = 256

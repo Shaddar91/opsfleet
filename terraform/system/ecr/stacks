@@ -1,5 +1,7 @@
-#deploy order: one stack folder per line, relative to this tier
+#deploy order: one stack folder per line, relative to this tier; the us-west-2 replicas before the rule that fills them
 of-api
 of-load
-frontend-web
-helm-charts
+of-failover
+of-api-usw2
+of-load-usw2
+replication

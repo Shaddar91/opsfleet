@@ -21,6 +21,7 @@ resource "kubectl_manifest" "application" {
     NAMESPACE        = kubernetes_namespace_v1.this.metadata[0].name
     TARGET_GROUP_ARN = aws_lb_target_group.this.arn
     CONTAINER_PORT   = var.container_port
+    IMAGE_REPOSITORY = var.image_repository
   })
   wait       = true
   depends_on = [terraform_data.chart]

@@ -6,7 +6,7 @@ module "repo" {
 
   project_name             = var.project_name
   project_description      = "Helm charts for the backend apps, with x86 and Graviton pinning values"
-  visibility               = "private"
+  visibility               = "public"
   default_branch           = "master"
   enable_branch_protection = var.enable_branch_protection
 }

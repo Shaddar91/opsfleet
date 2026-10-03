@@ -28,7 +28,7 @@ variable "helm_repo_credentials" {
 }
 
 variable "projects" {
-  description = "Argo CD AppProjects the argocd-apps chart renders, keyed by name; sourceRepos always starts with the of-helm repository"
+  description = "Argo CD AppProjects the argocd-apps chart renders, keyed by name; sourceRepos always starts with the of-helm repository, HTTPS and SSH form"
   type        = map(any)
 }
 

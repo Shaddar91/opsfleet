@@ -166,3 +166,9 @@ variable "chart_files" {
   type    = map(string)
   default = {}
 }
+
+variable "image_repository" {
+  type        = string
+  default     = null
+  description = "Image repository the Application sets as image.repository, the ECR repository URL from the ecr stack state; the chart ships the value empty"
+}

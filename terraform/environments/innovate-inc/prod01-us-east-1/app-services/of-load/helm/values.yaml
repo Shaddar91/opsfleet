@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: CHANGEME
-  tag: CHANGEME
+  repository: ""
+  tag: fe7703bcc7175a90b60d84e9a6e379e288954ec6
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -83,10 +83,11 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-ofApiUrl: http://of-api.of.svc.cluster.local
-
-cors:
-  allowedOrigins: [CHANGEME]
+secrets:
+  enabled: true
+  usePodIdentity: true
+  name: ""
+  keys: [OF_API_URL, CORS_ALLOWED_ORIGINS]
 
 stress:
   maxInflight: 4

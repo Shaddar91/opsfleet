@@ -6,7 +6,7 @@ module "service" {
   create_target_group_binding = false
   custom_target_group_binding = false
   create_certificate          = true
-  create_security_group_rule  = true
+  create_security_group_rule  = false
 
   environment           = var.environment
   application           = var.application
@@ -30,4 +30,5 @@ module "service" {
   namespace             = var.namespace
   architecture          = var.architecture
   chart_files           = module.helm_to_git.files
+  image_repository      = local.ecr_repository_url
 }

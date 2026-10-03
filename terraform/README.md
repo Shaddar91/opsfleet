@@ -14,12 +14,12 @@ Terraform for a dedicated VPC, an EKS cluster, and Karpenter launching x86 and G
 | `x86` | amd64 | none | 100 |
 | `graviton` | arm64 | `arch=arm64:NoSchedule` | 50 |
 
-`roll` also applies the rest of the environment tier (`internal-alb`) and the global tier (`global-accelerator`, `frontend`) and the `app-services` and `ci` tiers; `./tfctl.sh order` lists the system stacks and `environments/innovate-inc/tfctl.sh order` the environment ones.
+`environments/innovate-inc/prod01-us-east-1/tfctl.sh apply` also applies `internal-alb`, the `app-services` stacks and, when they are missing, the hosted zones and `global-accelerator`; `./tfctl.sh order` lists the system stacks and `prod01-us-east-1/tfctl.sh order` the region's.
 
 ## Layout
 
 - A stack is one Terraform root with its own state. A tier is a folder of stacks that share its `init.sh`, `provider.tf.tmpl` and `shared-variables.tf`.
-- `<tier>/stacks` lists the tier's stacks in apply order, and `rollout` lists the tiers in apply order: the account-wide `system/*` tiers (state, Ansible and artifact buckets, Route 53 zone, GitHub OIDC, SSH key, ECR, GitHub repositories), then `environments/innovate-inc/prod01-us-east-1` with its `cluster`, `cluster/eks/components`, `app-services` and `ci` tiers, and `system/access` last.
+- `<tier>/stacks` lists the tier's stacks in apply order. `terraform/rollout` lists the account-wide `system/*` tiers in apply order (state, Ansible and artifact buckets, Route 53 zone, GitHub OIDC, SSH key, ECR, GitHub repositories, and `system/access` last); `environments/innovate-inc/<region>/rollout` lists the region's tiers (`.` for network, edge and internal-alb, then `cluster`, `cluster/eks/components` and `app-services`). `ci` and `global/frontend` are in no rollout and run by hand.
 - `init.sh` renders the stack's `provider.auto.tf` from the template: provider versions, the S3 backend key and the upstream states the stack reads. `tfctl.sh` runs it for you.
 - `system/s3/state-bucket` creates the state bucket, so its own state stays on your machine under `${XDG_STATE_HOME:-$HOME/.local/state}/opsfleet/`.
 - `modules/` holds the modules the stacks call, such as `kubernetes/cluster-05` and `network/network-1.4.1`.
@@ -34,24 +34,26 @@ Terraform for a dedicated VPC, an EKS cluster, and Karpenter launching x86 and G
 
 ## Run it
 
-From `terraform/`:
+From `terraform/`, the system tiers first, then one region through the script in its folder:
 
 ```bash
-./tfctl.sh order     # every stack, in apply order
-./tfctl.sh check     # init -backend=false and validate on every stack, no AWS calls
-./tfctl.sh roll      # apply every stack in order; --auto-approve skips the prompts
+./tfctl.sh order                                            # every system stack, in apply order
+./tfctl.sh check                                            # init -backend=false and validate on every system stack, no AWS calls
+./tfctl.sh roll                                             # apply every system stack in order; --auto-approve skips the prompts
+environments/innovate-inc/prod01-us-east-1/tfctl.sh order   # the region's stacks, in apply order
+environments/innovate-inc/prod01-us-east-1/tfctl.sh apply   # the hosted zones and global-accelerator when missing, then the region's stacks
 ```
 
-After a failure, `roll`, `unroll` and `check` print the `--from` line that resumes at the failed stack. `./tfctl.sh <tier> validate|plan|apply|output|destroy|status [stack|all]` runs one verb on one tier or one stack, for example `./tfctl.sh environments/innovate-inc/prod01-us-east-1/cluster plan eks`. To build only the network, the cluster, Karpenter and developer access, apply in this order:
+After a failure, every walk prints the `--from` line that resumes at the failed stack. `./tfctl.sh apply|plan|destroy <stack>` in a region folder runs one verb on one stack of that region, for example `./tfctl.sh plan cluster/eks`; `prod01-us-west-2/tfctl.sh apply` builds the second region and finds the zones and the accelerator already there. To build only the network, the cluster, Karpenter and developer access, apply in this order:
 
 ```bash
 ./tfctl.sh system/s3 apply state-bucket
 ./tfctl.sh system/s3 apply ansible-bucket
 ./tfctl.sh system/r53 apply all
 ./tfctl.sh system apply all
-./tfctl.sh environments/innovate-inc/prod01-us-east-1 apply network
-./tfctl.sh environments/innovate-inc/prod01-us-east-1/cluster apply eks
-for s in namespaces karpenter-aws karpenter; do ./tfctl.sh environments/innovate-inc/prod01-us-east-1/cluster/eks/components apply "$s"; done
+environments/innovate-inc/prod01-us-east-1/tfctl.sh apply network
+environments/innovate-inc/prod01-us-east-1/tfctl.sh apply cluster/eks
+for s in namespaces karpenter-aws karpenter; do environments/innovate-inc/prod01-us-east-1/tfctl.sh apply "cluster/eks/components/$s"; done
 ./tfctl.sh system/access apply all
 ```
 
@@ -117,7 +119,8 @@ kubectl get node -L kubernetes.io/arch,karpenter.sh/nodepool,karpenter.sh/capaci
 
 ```bash
 kubectl delete -f hello-x86.yaml -f hello-graviton.yaml
-./tfctl.sh unroll    # destroy every stack, last to first
+environments/innovate-inc/prod01-us-east-1/tfctl.sh destroy   # the region's stacks, last to first, then global-accelerator and the hosted zones unless the other region or global/frontend still uses them
+./tfctl.sh system/access destroy all --durable                # then each system tier the same way, system/s3 last
 ```
 
-`unroll` will not destroy a stack while a later one still holds resources. After the cluster-only build, run its commands in reverse with `destroy` in place of `apply` and the component loop as `karpenter karpenter-aws namespaces`. The state bucket is destroyed last, together with the state files in it (`force_destroy = true` in its `terraform.tfvars`), unless `TF_VAR_create_state_bucket` is `false`, in which case it stays.
+No destroy removes a stack while a later one still holds resources. After the cluster-only build, run its commands in reverse with `destroy` in place of `apply` and the component loop as `karpenter karpenter-aws namespaces`. The state bucket is destroyed last, together with the state files in it (`force_destroy = true` in its `terraform.tfvars`), unless `TF_VAR_create_state_bucket` is `false`, in which case it stays.

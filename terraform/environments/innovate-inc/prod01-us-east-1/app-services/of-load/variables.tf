@@ -67,3 +67,8 @@ variable "argocd_project" {
   type        = string
   description = "Argo CD AppProject the Application belongs to; defined in the argocd components stack."
 }
+
+variable "web_subdomain" {
+  type        = string
+  description = "Label under the public zone the frontend is served on; https://<web_subdomain>.<zone domain> is the one browser origin the stress API answers, CORS_ALLOWED_ORIGINS in the app secret"
+}

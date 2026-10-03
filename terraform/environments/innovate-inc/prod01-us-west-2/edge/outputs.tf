@@ -37,3 +37,8 @@ output "app_fqdn" {
   description = "Hostname the certificate, the host rule and the Global Accelerator record share"
   value       = local.app_fqdn
 }
+
+output "global_accelerator_endpoint_group_arn" {
+  description = "ARN of this region's endpoint group on the accelerator, whose traffic dial the regional failover Lambda sets"
+  value       = module.alb.global_accelerator_endpoint_group_arn
+}

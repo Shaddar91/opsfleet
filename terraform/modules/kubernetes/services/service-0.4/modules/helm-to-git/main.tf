@@ -7,7 +7,7 @@ resource "github_repository_file" "chart" {
   content             = each.value
   commit_author       = var.commit_author
   commit_email        = var.commit_email
-  overwrite_on_create = false
+  overwrite_on_create = true
 
   lifecycle {
     ignore_changes = [content, commit_message, commit_author, commit_email]

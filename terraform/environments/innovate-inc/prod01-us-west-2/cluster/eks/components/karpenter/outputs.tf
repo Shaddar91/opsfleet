@@ -20,7 +20,7 @@ output "status" {
 
 output "node_class_name" {
   description = "EC2NodeClass every NodePool references"
-  value       = kubectl_manifest.ec2nodeclass.name
+  value       = { for pool, class in kubectl_manifest.ec2nodeclass : pool => class.name }
 }
 
 output "node_pools" {
