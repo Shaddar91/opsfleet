@@ -52,3 +52,13 @@ output "internal_records" {
   description = "Internal CNAMEs by key (primary: cluster endpoint, ro: reader, pool: proxy) as { name, fqdn }"
   value       = merge(module.aurora.internal_records, module.pool.internal_records)
 }
+
+output "cluster_identifier" {
+  description = "Identifier of this region's standby cluster"
+  value       = module.aurora.cluster_identifier
+}
+
+output "write_forwarding" {
+  description = "Whether the aurora/forwarding tier turns write forwarding on for this cluster"
+  value       = var.write_forwarding
+}

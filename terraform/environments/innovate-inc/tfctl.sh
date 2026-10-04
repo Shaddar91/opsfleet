@@ -183,7 +183,7 @@ act_apply() {
     ((rc != 2)) || return 1
     if ((rc == 0)); then printf 'tfctl: %s is deployed and up to date, skipped\n' "$id"; return 0; fi
   fi
-  in_stack "$id" real apply "${APPROVE[@]}"
+  in_stack "$id" real apply -parallelism=45 "${APPROVE[@]}"
 }
 
 #a shared stack still in use is kept by a walk and refused by name; any other stack in use is refused
@@ -199,7 +199,7 @@ act_destroy() {
     printf 'tfctl: refusing to destroy %s: %s\n' "$id" "$HOLDER" >&2
     return 1
   fi
-  in_stack "$id" real destroy "${APPROVE[@]}" && EMPTY[$id]=1
+  in_stack "$id" real destroy -parallelism=45 "${APPROVE[@]}" && EMPTY[$id]=1
 }
 
 #walk VERB ACTION START STEP [RESUME]: ACTION on IDS[START], IDS[START+STEP], ... until the first failure

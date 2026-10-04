@@ -1,0 +1,44 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  required_version = "1.16.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.66.0"
+    }
+  }
+  backend "s3" {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/${PARENT_DIR}/${DIR}/${DIR}.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    encrypt                     = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "${REGION}"
+}
+
+data "terraform_remote_state" "aurora" {
+  backend = "s3"
+  config = {
+    bucket                      = "${STATE_BUCKET}"
+    key                         = "${STATE_KEY_PREFIX}/environments/${ENV}/aurora/aurora.tfstate"
+    region                      = "${STATE_BUCKET_REGION}"
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    skip_credentials_validation = true
+  }
+}
+
+locals {
+  cluster_identifier = data.terraform_remote_state.aurora.outputs.cluster_identifier
+  write_forwarding   = data.terraform_remote_state.aurora.outputs.write_forwarding
+}

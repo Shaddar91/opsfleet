@@ -17,4 +17,6 @@ locals {
   internal_domain = trimsuffix(local.internal_zone_domain_name, ".")
   db_host         = "${local.internal_dns.name}-pool.${local.internal_domain}"
   db_reader_host  = "${local.internal_dns.name}-ro.${local.internal_domain}"
+  backend_db_host = var.write_forwarding ? local.db_reader_host : local.db_host
+  backend_cidrs   = var.write_forwarding ? [for s in data.aws_subnet.private : s.cidr_block] : []
 }

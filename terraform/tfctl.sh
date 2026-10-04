@@ -195,9 +195,9 @@ guard() {
 banner() { printf '==> %s %s\n' "$1" "$(label "$2")"; }
 act_validate() { banner validate "$1" && in_stack "$1" validate validate; }
 act_plan() { banner plan "$1" && in_stack "$1" real plan; }
-act_apply() { banner apply "$1" && in_stack "$1" real apply "${APPROVE[@]}"; }
+act_apply() { banner apply "$1" && in_stack "$1" real apply -parallelism=45 "${APPROVE[@]}"; }
 act_output() { banner output "$1" && in_stack "$1" quiet output; }
-act_destroy() { banner destroy "$1" && guard "$1" && in_stack "$1" real destroy "${APPROVE[@]}" && EMPTY[$1]=1; }
+act_destroy() { banner destroy "$1" && guard "$1" && in_stack "$1" real destroy -parallelism=45 "${APPROVE[@]}" && EMPTY[$1]=1; }
 
 act_status() {
   local id=$1 n out rc=0 word=clean

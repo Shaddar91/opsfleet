@@ -1,5 +1,6 @@
 #tier apply order, relative to this region; destroy walks it bottom to top. ci is not here on purpose: run its stacks by hand.
 .
+aurora/forwarding
 cluster
 cluster/eks/components
 app-services

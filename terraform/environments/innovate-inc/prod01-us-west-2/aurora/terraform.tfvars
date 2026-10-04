@@ -7,3 +7,6 @@ serverlessv2_scaling = null
 
 deletion_protection = false
 skip_final_snapshot = true
+
+#reads stay in this region, Aurora forwards writes to the writer; the backends use the reader endpoint while this is on
+write_forwarding = true

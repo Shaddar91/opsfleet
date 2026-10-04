@@ -36,3 +36,8 @@ variable "aurora_master_password" {
   type        = string
   sensitive   = true
 }
+
+variable "write_forwarding" {
+  description = "Forward writes sent to this read-only copy to the global database's writer: the aurora/forwarding tier turns it on, and the backends connect to the reader endpoint instead of the proxy"
+  type        = bool
+}
