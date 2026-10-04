@@ -3,15 +3,14 @@
 module "failover" {
   source = "../../../../../modules/lambda/lambda-1.2"
 
-  environment                    = var.environment
-  application                    = "failover"
-  function_name                  = "regional"
-  description                    = "Fences a region on the accelerator and promotes the Aurora global database standby; invoke with {\"action\":\"status\"} first"
-  image_uri                      = "${local.image_repository_url}:${var.image_tag}"
-  architecture                   = "arm64"
-  timeout                        = var.timeout
-  memory_size                    = var.memory_size
-  reserved_concurrent_executions = 1
+  environment   = var.environment
+  application   = "failover"
+  function_name = "regional"
+  description   = "Fences a region on the accelerator and promotes the Aurora global database standby; invoke with {\"action\":\"status\"} first"
+  image_uri     = "${local.image_repository_url}:${var.image_tag}"
+  architecture  = "arm64"
+  timeout       = var.timeout
+  memory_size   = var.memory_size
 
   environment_variables = {
     FAILOVER_SECRET_ARN = module.config.arn
