@@ -24,6 +24,7 @@ The cloud design for Innovate Inc. and the Terraform that builds it: two regions
   - [Tear down](terraform/README.md#tear-down)
   - [How to deploy](terraform/README.md#how-to-deploy)
   - [Command sheet for the region scripts](terraform/environments/innovate-inc/README.md): [secrets](terraform/environments/innovate-inc/README.md#secrets-first), [a region](terraform/environments/innovate-inc/README.md#a-region), [after a failure](terraform/environments/innovate-inc/README.md#after-a-failure), [system tiers](terraform/environments/innovate-inc/README.md#system-tiers), [messages and what to do](terraform/environments/innovate-inc/README.md#messages-and-what-to-do)
+- [Related repositories](#related-repositories)
 
 ## Where things are
 
@@ -34,3 +35,16 @@ The cloud design for Innovate Inc. and the Terraform that builds it: two regions
 | [terraform/system/](terraform/system/) | Account-wide stacks: buckets, Route 53, IAM, SSH key, ECR, GitHub repositories, developer access, secret store |
 | [terraform/modules/](terraform/modules/) | The versioned modules the stacks call, as `<area>/<name>-<version>` |
 | [.github/workflows/terraform.yml](.github/workflows/terraform.yml) | Runs one stack by hand: plan, then apply once approved |
+
+## Related repositories
+
+The applications and charts this platform runs. The Terraform here writes their CI workflows.
+
+| Repository | What it is |
+|---|---|
+| [of-api](https://github.com/Shaddar91/of-api) | Flask REST API, image built for amd64 and arm64 |
+| [of-web](https://github.com/Shaddar91/of-web) | React (Vite) web app, served by CloudFront |
+| [of-load](https://github.com/Shaddar91/of-load) | Stress API for pod and node autoscaling tests |
+| [of-helm](https://github.com/Shaddar91/of-helm) | Helm charts Argo CD deploys, with x86 and Graviton values |
+| [of-failover](https://github.com/Shaddar91/of-failover) | Lambda that fences a region on Global Accelerator and promotes the Aurora standby |
+| [of-launch](https://github.com/Shaddar91/of-launch) | Deployment dashboard: Flask, MySQL, CodeDeploy |
