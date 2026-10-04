@@ -151,13 +151,13 @@
         <mxCell id="acct_prod_i" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" vertex="1" parent="acct_prod">
           <mxGeometry x="12" y="58" width="40" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="acct_prod_txt" value="VPC, EKS, PostgreSQL Multi-AZ, CloudFront and WAF, CMKs, ArgoCD; optional DR region" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=13;fontColor=#232F3E;" vertex="1" parent="acct_prod">
+        <mxCell id="acct_prod_txt" value="VPC, EKS, PostgreSQL Multi-AZ, CloudFront and WAF, CMKs, ArgoCD; second region us-west-2 in this account" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=13;fontColor=#232F3E;" vertex="1" parent="acct_prod">
           <mxGeometry x="62" y="52" width="370" height="120" as="geometry" />
         </mxCell>
         <mxCell id="ext_pd" value="&lt;b&gt;PagerDuty, Slack and ticketing&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#545B64&quot;&gt;Critical and high: PagerDuty. Medium and low: Slack. Compliance failures: ticketing.&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#545B64;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="492" width="180" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="ext_gws" value="&lt;b&gt;Google Workspace (IdP)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#545B64&quot;&gt;Users and groups for IAM Identity Center; MFA at the IdP&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#545B64;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=8;" vertex="1" parent="1">
+        <mxCell id="ext_gws" value="&lt;b&gt;Company directory (IdP), e.g. Google Workspace&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#545B64&quot;&gt;Users and groups for IAM Identity Center; MFA at the IdP&lt;/font&gt;" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#545B64;fontColor=#232F3E;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=8;" vertex="1" parent="1">
           <mxGeometry x="2090" y="140" width="200" height="90" as="geometry" />
         </mxCell>
         <mxCell id="ext_gha" value="GitHub Actions" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#F6F8FA;strokeColor=#24292E;fontColor=#24292E;fontSize=14;fontStyle=1;align=left;verticalAlign=top;spacingLeft=56;spacingTop=16;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
@@ -316,7 +316,7 @@
           <mxGeometry x="-0.302" relative="1" as="geometry" />
         </mxCell>
         <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;" style="rounded=1;arcSize=2;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AAB7B8;fontColor=#232F3E;fontSize=12;align=left;verticalAlign=top;spacingLeft=12;spacingTop=6;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
-          <mxGeometry x="330" y="1170" width="1720" height="250" as="geometry" />
+          <mxGeometry x="330" y="1170" width="1720" height="290" as="geometry" />
         </mxCell>
         <mxCell id="lg_solid" value="" style="rounded=1;arcSize=10;html=1;fillColor=#FFFFFF;strokeColor=#545B64;" vertex="1" parent="legend">
           <mxGeometry x="16" y="39" width="44" height="20" as="geometry" />
@@ -381,8 +381,8 @@
         <mxCell id="lg_g9_txt" value="Traffic: F16" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=11;fontColor=#232F3E;" vertex="1" parent="legend">
           <mxGeometry x="600" y="218" width="380" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="lg_statements" value="No VPC-to-VPC connectivity exists between accounts (no peering, no Transit Gateway, no PrivateLink).&lt;br&gt;&lt;br&gt;No Kubernetes API access crosses an account boundary (ArgoCD runs inside each cluster).&lt;br&gt;&lt;br&gt;No path exists from Shared Services into Backup.&lt;br&gt;&lt;br&gt;Humans: ReadOnly everywhere, write only in Dev (Developer), Shared Services and Security Tooling (PlatformAdmin / SecurityAnalyst), Management (OrgAdmin); BreakGlass in Staging, Prod, Backup." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#232F3E;spacingLeft=12;spacingRight=12;spacingTop=8;strokeColor=#CD2264;fillColor=#FDF2F7;rounded=1;arcSize=4;" vertex="1" parent="legend">
-          <mxGeometry x="1000" y="36" width="704" height="200" as="geometry" />
+        <mxCell id="lg_statements" value="No VPC-to-VPC connectivity exists between accounts (no peering, no Transit Gateway, no PrivateLink).&lt;br&gt;&lt;br&gt;No Kubernetes API access crosses an account boundary (ArgoCD runs inside each cluster).&lt;br&gt;&lt;br&gt;No path exists from Shared Services into Backup.&lt;br&gt;&lt;br&gt;Humans: ReadOnly everywhere, write only in Dev (Developer), Shared Services and Security Tooling (PlatformAdmin / SecurityAnalyst), Management (OrgAdmin); BreakGlass in Staging, Prod, Backup.&lt;br&gt;&lt;br&gt;Reserved for later, not on day one: a Data OU under Workloads for a data engineering account, and a Transit account under Infrastructure holding a Transit Gateway shared through RAM." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#232F3E;spacingLeft=12;spacingRight=12;spacingTop=8;strokeColor=#CD2264;fillColor=#FDF2F7;rounded=1;arcSize=4;" vertex="1" parent="legend">
+          <mxGeometry x="1000" y="36" width="704" height="240" as="geometry" />
         </mxCell>
         <mxCell id="lg_e1" value="" style="html=1;endArrow=block;endFill=1;strokeWidth=1.5;strokeColor=#00A4A6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
@@ -439,7 +439,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="footer" value="8 accounts and 5 OUs on day one. Shared accounts: Shared Services (ECR, Route 53 parent zone, Terraform state, CI roles, Grafana), Backup, Log Archive, Security Tooling." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
-          <mxGeometry x="330" y="1432" width="1720" height="26" as="geometry" />
+          <mxGeometry x="330" y="1472" width="1720" height="26" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tier:
-        description: Tier as tfctl.sh names it; system/... runs terraform/tfctl.sh, anything else environments/innovate-inc/tfctl.sh
+        description: system/<tier> runs terraform/tfctl.sh on the stack; any other tier (global, <region>, <region>/cluster, ...) runs the tier's init.sh and terraform in environments/innovate-inc/<tier>/<stack>
         required: true
         type: string
       stack:
@@ -70,9 +70,12 @@ jobs:
           aws-region: ${{ env.STATE_BUCKET_REGION }}
       - name: Plan, addresses and totals only
         run: |
-          if [[ $TIER == system* ]]; then cd terraform; else cd terraform/environments/innovate-inc; fi
           status=0
-          ./tfctl.sh "$TIER" plan "$STACK" > "$RUNNER_TEMP/plan.log" 2>&1 || status=$?
+          if [[ $TIER == system* ]]; then
+            (cd terraform && ./tfctl.sh "$TIER" plan "$STACK") > "$RUNNER_TEMP/plan.log" 2>&1 || status=$?
+          else
+            (cd "terraform/environments/innovate-inc/$TIER/$STACK" && ../init.sh && terraform plan) > "$RUNNER_TEMP/plan.log" 2>&1 || status=$?
+          fi
           grep -E '^\s+# .* (will|must) be |^Plan: |^No changes\.' "$RUNNER_TEMP/plan.log" | tee -a "$GITHUB_STEP_SUMMARY" || true
           grep -A4 'Error:' "$RUNNER_TEMP/plan.log" || true
           exit "$status"
@@ -117,9 +120,12 @@ jobs:
           aws-region: ${{ env.STATE_BUCKET_REGION }}
       - name: Apply, totals only
         run: |
-          if [[ $TIER == system* ]]; then cd terraform; else cd terraform/environments/innovate-inc; fi
           status=0
-          ./tfctl.sh "$TIER" apply "$STACK" --auto-approve > "$RUNNER_TEMP/apply.log" 2>&1 || status=$?
+          if [[ $TIER == system* ]]; then
+            (cd terraform && ./tfctl.sh "$TIER" apply "$STACK" --auto-approve) > "$RUNNER_TEMP/apply.log" 2>&1 || status=$?
+          else
+            (cd "terraform/environments/innovate-inc/$TIER/$STACK" && ../init.sh && terraform apply -auto-approve) > "$RUNNER_TEMP/apply.log" 2>&1 || status=$?
+          fi
           grep -E '^Apply complete!|^No changes\.' "$RUNNER_TEMP/apply.log" | tee -a "$GITHUB_STEP_SUMMARY" || true
           grep -A4 'Error:' "$RUNNER_TEMP/apply.log" || true
           exit "$status"

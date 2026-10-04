@@ -286,6 +286,9 @@ main() {
   done
   load_region "$REGION_DIR" "" IDS
   (($#)) || bad_usage "no command given"
+  if [[ $1 == apply || $1 == plan ]]; then
+    "$ROOT/../../tf-secrets.sh" pull --region "$REGION" --quiet || die "a secrets.auto.tfvars file this region needs is missing locally and in Secrets Manager"
+  fi
   case $1 in
     -h | --help | help) usage ;;
     order) order ;;

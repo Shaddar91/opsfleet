@@ -1,4 +1,5 @@
 #system tiers only; the innovate-inc environment has its own script: environments/innovate-inc/tfctl.sh
+system/secret-store
 system/s3
 system/r53
 system/iam

@@ -2,7 +2,7 @@
 
 ## 1. Summary
 
-Innovate Inc. serves its React single-page app from Amazon S3 through CloudFront and its Flask REST API from Amazon EKS through Global Accelerator and an Application Load Balancer, all built by the Terraform in `terraform/`. Today one AWS account holds everything: the account-wide services (Terraform state, artifact and backup buckets, Route 53 zones, ECR, GitHub OIDC roles) and the production environment `prod01-us` in us-east-1, with a copy of that environment in us-west-2. Karpenter adds and removes x86 and Graviton nodes on Spot or On-Demand capacity, and Argo CD deploys the applications from Helm charts kept in Git. PostgreSQL is Aurora PostgreSQL Serverless v2, written as a global database across both regions and kept out of the rollout, so it is not built yet. The proposal in section 4 moves this into an AWS Organization of eight accounts with IAM Identity Center sign-in and organization-wide guardrails; none of it is built yet.
+Innovate Inc. serves its React single-page app from Amazon S3 through CloudFront and its Flask REST API from Amazon EKS through Global Accelerator and an Application Load Balancer, all built by the Terraform in `terraform/`. Today one AWS account holds everything: the account-wide services (Terraform state, artifact and backup buckets, Route 53 zones, ECR, GitHub OIDC roles) and the production environment `prod01-us` in us-east-1, with a copy of that environment in us-west-2. Karpenter adds and removes x86 and Graviton nodes on Spot or On-Demand capacity, and Argo CD deploys the applications from Helm charts kept in Git. PostgreSQL is Aurora PostgreSQL Serverless v2, written as a global database across both regions and kept out of the rollout, so it is not built yet. The proposal in section 4 moves this into an AWS Organization of eight accounts with IAM Identity Center sign-in and organization policies no account administrator can undo; none of it is built yet.
 
 ![Current state: how a request travels, from the user side](current-state/infrastructure.png)
 
@@ -26,7 +26,7 @@ Line styles: in the current-state diagrams a solid box or line is in the Terrafo
 
 ## 3. Status markers
 
-"Built" means in the Terraform code of this repository; "Not built yet" means proposed or planned. Code that is present but kept out of the rollout on purpose (commented out of its tier's `stacks` file) is also marked Not built yet, because no rollout creates it. A stack listed in a tier's `manual` file is Built and runs only when applied by name. The document makes no claim about live deployment: it describes the code and the proposal, not what an AWS account holds at any moment.
+"Built" means in the Terraform code of this repository; "Not built yet" means proposed or planned. Code that is present but kept out of the rollout on purpose (commented out of its tier's `stacks` file) is also marked Not built yet, because no rollout creates it. A stack in no `rollout` (`global/frontend`, each region's `ci`) is Built and runs only when applied by hand. The document makes no claim about live deployment: it describes the code and the proposal, not what an AWS account holds at any moment.
 
 Stack paths follow the diagrams: a path that starts with `system/` is under `terraform/`, every other stack path is under `terraform/environments/innovate-inc/`, and a path that starts with `cluster/`, `app-services/` or `ci/` is short for the same path under `prod01-us-east-1/`. Values that belong to one site are shown as placeholders: `<account-id>`, `<state-bucket>`, `<prefix>` (the state key prefix), `<web-bucket>`, `<artifact-bucket>`, `<ansible-bucket>`, `<edge-log-bucket>`, `<log-bucket>`, `<backup-bucket>`, `<github-owner>`, `<developer>` (an IAM user) and `<terraform-role>` (the operator's role). The DNS names use the parent zone `innovate.example`, the public zone `prod.innovate.example` and the internal zone `internal-prod.innovate.example`.
 
@@ -47,7 +47,7 @@ No stack in this repository creates or joins an AWS Organization, so the code ru
 | Global services | global | Global Accelerator (`global/global-accelerator`); CloudFront site with WAF, Lambda@Edge and the web bucket (`global/frontend`, applied by name); Route 53 public and internal zones (`system/r53/opsfleet`); IAM: GitHub OIDC provider (`system/iam/github-oidc`), Terraform CI roles (`system/iam/terraform-ci`), developer group and deploy role (`system/access/developers`) |
 | Account-wide, regional | us-east-1 | ECR repositories with their CI push roles (`system/ecr/of-api`, `of-load`, `frontend-web`, `helm-charts`); artifact, Ansible and backup buckets (`system/s3/*`); bastion key pair (`system/ssh-key`) |
 | Terraform state | the region `STATE_BUCKET_REGION` names | state bucket (`system/s3/state-bucket`) |
-| Environment `prod01-us` | us-east-1 | VPC and bastion (`prod01-us-east-1/network`), public ALB (`edge`), internal ALB (`internal-alb`), EKS (`cluster/eks`) with nine components, app services `example-api` and `of-load`, CI roles and GitHub Actions settings (`ci/roles`, `ci/github-actions`); Aurora primary in code, kept out of the rollout (Not built yet) |
+| Environment `prod01-us` | us-east-1 | VPC and bastion (`prod01-us-east-1/network`), public ALB (`edge`), internal ALB (`internal-alb`), EKS (`cluster/eks`) with nine components, app services `of-api` and `of-load`, CI roles and GitHub Actions settings (`ci/roles`, `ci/github-actions`); Aurora primary in code, kept out of the rollout (Not built yet) |
 | Environment `prod01-usw2` | us-west-2 | the same stacks under `prod01-us-west-2/`, with `ci/github-actions` applied by name; Aurora secondary in code, kept out of the rollout (Not built yet); the backup bucket's replica |
 | Outside AWS | GitHub | repositories of-web, of-api and of-helm, private with branch protection on `master` (`system/github/*`); this repository; the of-load and of-launch repositories |
 
@@ -96,20 +96,20 @@ Root
 
 Three more OUs are reserved and not created on day one: Sandbox (per-engineer accounts with a hard budget and no path to Prod), PolicyStaging (where a new SCP or RCP is attached first) and Suspended (closed accounts under a deny-all SCP for the 90-day closure window). Deliberately not created: a network account (nothing needs VPC-to-VPC traffic), a prod-data account (it adds cross-account networking and IAM for little gain over CMK encryption, private subnets, IAM database authentication, Secrets Manager and RCPs), a data and analytics account (no analytics workload exists), an observability account (telemetry stays in each workload account) and per-engineer sandbox accounts on day one.
 
-**Guardrails.** Organization policies are attached once and inherited down the tree:
+**Organization policies.** Attached once at the top of the tree and inherited down it, so no account administrator can undo them:
 
 | Policy | Attached to | Effect |
 |---|---|---|
-| SCP `foundation` | Root | Deny leaving the organization; deny stopping or changing CloudTrail, Config, GuardDuty and Security Hub except by the Control Tower and baseline roles; deny every action outside the primary and DR regions (global services excepted); deny all root-user actions; deny `iam:CreateUser` and `iam:CreateAccessKey` except by the baseline role; deny `kms:ScheduleKeyDeletion` except through `BreakGlass` |
-| SCP `security-ou` | Security OU | Deny changes to Object Lock, bucket policies and key policies on the Log Archive buckets and keys except by the baseline role |
-| SCP `prod-ou` | Prod OU | Deny public RDS and EBS snapshots, public AMIs, `PubliclyAccessible` RDS instances and deleting AWS Backup recovery points |
-| SCP `sandbox-ou` (day two) | Sandbox OU | Deny assuming roles in other organization accounts, VPC peering, Transit Gateway attachments and RAM sharing |
-| RCP `data-perimeter` | Root | For S3, KMS, Secrets Manager, SQS and STS, deny access unless the caller belongs to this organization (AWS service principals excepted) |
-| Declarative policy `ec2-defaults` | Root | IMDSv2 by default, no public AMIs, no public EBS snapshots |
-| Tag policy `required-tags` | Root | `Environment` (`dev`, `staging`, `prod`, `shared`, `security`), `Owner`, `CostCenter` |
-| Backup policy `prod-backups` | Prod OU (and NonProd for Staging if required) | The PostgreSQL backup plan and its copy to the Backup vault in the DR region |
+| SCP | Root | Deny leaving the organization; deny stopping or changing CloudTrail, Config, GuardDuty and Security Hub except by the Control Tower and baseline roles; deny every action outside the primary and DR regions (global services excepted); deny all root-user actions; deny `iam:CreateUser` and `iam:CreateAccessKey` except by the baseline role; deny `kms:ScheduleKeyDeletion` except through `BreakGlass` |
+| SCP | Security OU | Deny changes to Object Lock, bucket policies and key policies on the Log Archive buckets and keys except by the baseline role |
+| SCP | Prod OU | Deny public RDS and EBS snapshots, public AMIs, `PubliclyAccessible` RDS instances and deleting AWS Backup recovery points |
+| SCP (day two) | Sandbox OU | Deny assuming roles in other organization accounts, VPC peering, Transit Gateway attachments and RAM sharing |
+| RCP | Root | For S3, KMS, Secrets Manager, SQS and STS, deny access unless the caller belongs to this organization (AWS service principals excepted) |
+| Declarative policy | Root | IMDSv2 by default, no public AMIs, no public EBS snapshots |
+| Tag policy | Root | `Environment` (`dev`, `staging`, `prod`, `shared`, `security`), `Owner`, `CostCenter` |
+| Backup policy | Prod OU (and NonProd for Staging if required) | The PostgreSQL backup plan and its copy to the Backup vault in the DR region |
 
-The NonProd OU carries only `foundation`, so developers keep room to work in Dev.
+The NonProd OU carries only the Root SCP, so developers keep room to work in Dev.
 
 **How the organization is built.** A Terraform stack `org/` creates the Control Tower landing zone, the OUs, the policies (JSON files rendered with `templatefile()`), the delegated administrators and the accounts, through the Control Tower Account Factory. CI applies it against the Management account as `gha-org-admin`. It is bootstrapped once with local state from an administrator workstation, then its state moves to the Shared Services state bucket. Each new account gets an account baseline module, applied by assuming `AWSControlTowerExecution`: the default VPC deleted in every governed region, S3 Block Public Access on, EBS encryption by default with a CMK, one CMK per data class (`user-data`, `logs`, `backups`, `platform`), the GitHub OIDC provider and a `gha-deploy` role with a permissions boundary, membership in the security services, forwarding of root sign-in and `BreakGlass` events, log retention defaults, a monthly budget alerting at 50, 80 and 100 percent, required tags, and its own prefix in the state bucket. After that, the account's `gha-deploy` role takes over. Account Factory for Terraform is not used below about 20 accounts. A pure-Terraform organization without Control Tower was rejected: the team would have to write and maintain the baseline and every detective control itself.
 
@@ -119,7 +119,7 @@ The NonProd OU carries only `foundation`, so developers keep room to work in Dev
 
 **Flows across accounts.** Sixteen flows cross account boundaries (F1 to F16 in the diagram) and none of them needs a VPC in one account to reach a VPC in another: logs go to Log Archive (F1, F2), findings and root sign-in events to Security Tooling (F3 to F5), images and Terraform runs come from GitHub Actions through OIDC (F6, F7), workloads pull images by digest from Shared Services over ECR VPC endpoints (F8), Terraform state lives in Shared Services (F9), PostgreSQL snapshots copy into Backup (F10), the parent zone delegates `dev.`, `staging.` and `prod.` subzones by NS records (F11), Grafana reads metrics across accounts (F12), Identity Center hands out roles (F13, F14), policies are inherited (F15), and users reach Prod through CloudFront and WAF (F16). "Shared" means permitted by a resource policy, not routed, which is why no peering, Transit Gateway or PrivateLink exists between the accounts and why there is no network account on day one.
 
-**Regions.** The primary region follows where the users' data must stay, and the `foundation` allow-list and Control Tower's governed regions hold exactly the primary and the DR region. This repository builds us-east-1 as the primary and us-west-2 as the second region; if a DR region is adopted for compute, it lives inside the Prod account.
+**Regions.** The primary region follows where the users' data must stay, and the Root SCP's region allow-list and Control Tower's governed regions hold exactly the primary and the DR region. This repository builds us-east-1 as the primary and us-west-2 as the second region; if a DR region is adopted for compute, it lives inside the Prod account.
 
 **When the structure grows.**
 
@@ -158,7 +158,7 @@ Every stack in the code has a home in the proposal. The moves are Not built yet.
 | `prod01-us-east-1/aurora` (kept out) | Aurora PostgreSQL primary | Prod, Multi-AZ; Dev and Staging get their own PostgreSQL | Not built yet |
 | `prod01-us-east-1/cluster/eks` | EKS cluster and managed node groups | Prod; Dev and Staging one cluster each | Not built yet |
 | `prod01-us-east-1/cluster/eks/components` (nine stacks; `keda` and `traefik-NOTUSED` kept out) | Namespaces, Karpenter, EBS CSI, metrics-server, load balancer controller, external-dns, Argo CD and its configuration | Each cluster's account; Argo CD inside each cluster in pull mode | Not built yet |
-| `prod01-us-east-1/app-services/example-api`, `of-load` | Target groups, host rules, certificates, records, Argo CD Applications | Each workload account | Not built yet |
+| `prod01-us-east-1/app-services/of-api`, `of-load` | Target groups, host rules, certificates, records, Argo CD Applications | Each workload account | Not built yet |
 | `prod01-us-east-1/ci/roles` | Per-repository OIDC roles | `gha-deploy` per workload account; image push through `gha-ecr-push` in Shared Services | Not built yet |
 | `prod01-us-east-1/ci/github-actions` | Actions secrets and variables | GitHub environments per account, which `gha-deploy` trusts | Not built yet |
 | `prod01-us-west-2/*` (every tier) | The second region | Prod: both regions of an active and DR pair live in the Prod account | Not built yet |
@@ -233,9 +233,9 @@ Source: [target-state/access.drawio](target-state/access.drawio). Everything in 
 
 The lanes keep the order of the current state; what changes is where a person signs in and where each role lives.
 
-**Sign-in.** The Identity Center instance lives in Management and its administration (users, groups, assignments) is delegated to Security Tooling, so nobody works in Management ([AWS: delegated administration](https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html)). Google Workspace is the identity provider (IdP), connected by SAML with SCIM provisioning of users and groups ([AWS: Google Workspace](https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-gwp.html)). MFA is enforced once, at Google Workspace, because Identity Center does not run its own MFA for an external IdP ([AWS: MFA in Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-mfa.html)).
+**Sign-in.** The Identity Center instance lives in Management and its administration (users, groups, assignments) is delegated to Security Tooling, so nobody works in Management ([AWS: delegated administration](https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html)). The company directory is the identity provider (IdP), Google Workspace in this proposal (Okta or Microsoft Entra work the same way), connected by SAML with SCIM provisioning of users and groups ([AWS: Google Workspace](https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-gwp.html)). MFA is enforced once, at Google Workspace, because Identity Center does not run its own MFA for an external IdP ([AWS: MFA in Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-mfa.html)).
 
-**No IAM users.** The `foundation` SCP denies creating them; every human session is Identity Center, then a permission set, then short-lived STS credentials.
+**No IAM users.** The Root SCP denies creating them; every human session is Identity Center, then a permission set, then short-lived STS credentials.
 
 **Permission sets.** Identity Center creates a role `AWSReservedSSO_<permission-set>_<hash>` in each account a permission set is assigned to ([AWS: permission set roles](https://docs.aws.amazon.com/singlesignon/latest/userguide/referencingpermissionsets.html)).
 
@@ -306,7 +306,7 @@ Each region has one VPC, `10.144.0.0/16`, across three Availability Zones with f
 | Public ALB `prod01-us-edge-sg` | 80 and 443 from `0.0.0.0/0` | All to `10.144.0.0/16` |
 | Internal ALB `prod01-us-internal-alb-sg` | 80 and 443 from `10.144.0.0/16` | All to `10.144.0.0/16` |
 | Nodes `prod01-us-eks` (nodes also carry the EKS cluster security group) | All protocols from `10.144.0.0/16` | All to `0.0.0.0/0` |
-| Service rules (`example-api`, `of-load`) | TCP 8000 from the public ALB's group to the cluster security group | |
+| Service rules (`of-api`, `of-load`) | TCP 8000 from the public ALB's group to the cluster security group | |
 | Database `prod01-us-aurora-aurora-sg` (kept out, Not built yet) | None | None |
 
 **WAF.** Two web ACLs filter public traffic: one on CloudFront and one on the public ALB (section 7). The Ingress ALB that the load balancer controller builds has none.
@@ -325,14 +325,14 @@ Route 53 answers for `prod.innovate.example`: the web app's names point at Cloud
 |---|---|---|---|
 | `web.prod.innovate.example` and the apex | A alias | CloudFront | `global/frontend` |
 | `app.prod.innovate.example` | A alias | Global Accelerator | `global/global-accelerator` |
-| `example-api.prod.innovate.example` | A alias, target health evaluated | Global Accelerator | `prod01-us-east-1/app-services/example-api` |
+| `api.prod.innovate.example` | A alias, target health evaluated | Global Accelerator | `prod01-us-east-1/app-services/of-api` |
 | `load.prod.innovate.example` | A alias | Global Accelerator | `prod01-us-east-1/app-services/of-load` |
 | `argocd.prod.innovate.example` | Written by external-dns from the Argo CD Ingress | Ingress ALB | `cluster/eks/components/external-dns` |
 | Certificate validation names | The record ACM asks for, TTL 60 | ACM | The stack that owns each certificate |
 
 The internal ALB's host pattern `*.internal.prod.innovate.example` has no record, and no Route 53 health check is built.
 
-**Certificates.** ACM issues every certificate with DNS validation in the public zone: `web.` plus the apex in us-east-1 for CloudFront (`global/frontend`), `app.` for the public ALB (`edge`), `example-api.` and `load.` for their services, and `argocd.` for the Ingress ALB.
+**Certificates.** ACM issues every certificate with DNS validation in the public zone: `web.` plus the apex in us-east-1 for CloudFront (`global/frontend`), `app.` for the public ALB (`edge`), `api.` and `load.` for their services, and `argocd.` for the Ingress ALB.
 
 **Global Accelerator** (`global/global-accelerator`). The accelerator `innovate-inc-edge-accelerator` gives the API static anycast IPv4 addresses and one listener on TCP 80 and 443 with no client affinity. Each region's edge stack attaches its public ALB as an endpoint group on that listener: traffic dial 100, weight 100, client IP preservation on, so the ALB and its WAF see the client's address. The accelerator sends each client to the nearest healthy region ([AWS: how Global Accelerator works](https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works.html)). For an ALB endpoint, the accelerator ignores its own health check settings and counts the ALB healthy only when every target group behind it has at least one healthy target ([AWS: Global Accelerator health checks](https://docs.aws.amazon.com/global-accelerator/latest/dg/about-endpoint-groups-health-check-options.html)). When nothing is healthy, it sends traffic to a random endpoint in the nearest group ([AWS: unhealthy endpoints](https://docs.aws.amazon.com/global-accelerator/latest/dg/about-endpoints-endpoint-weights.unhealthy-endpoints.html)).
 
@@ -340,7 +340,7 @@ The internal ALB's host pattern `*.internal.prod.innovate.example` has no record
 
 - `prod01-us-edge`: internet-facing in the three public subnets, HTTP/2 on, invalid header fields dropped, idle timeout 60 seconds, deletion protection off.
 - Listeners: HTTP 80 answers 301 to HTTPS; HTTPS 443 uses `ELBSecurityPolicy-TLS13-1-2-2021-06` with one certificate per host (SNI) and a default action of fixed 403.
-- Host rules: priority 10 sends `example-api.` and priority 20 sends `load.` to their target groups (ip targets, HTTP 8000, health check `/healthz`), each filled by a TargetGroupBinding in its chart. Priority 100 sends `app.` to `prod01-us-edge-ingress` (ip targets, HTTP 8000, health check on 8080 `/ping`).
+- Host rules: priority 10 sends `api.` and priority 20 sends `load.` to their target groups (ip targets, HTTP 8000, health check `/healthz`), each filled by a TargetGroupBinding in its chart. Priority 100 sends `app.` to `prod01-us-edge-ingress` (ip targets, HTTP 8000, health check on 8080 `/ping`).
 - WAF `prod01-us-edge-lb-web-acl`, regional, default allow, rules by priority: 2 Amazon IP reputation list, 3 Common Rule Set, 4 `blacklisted-ips` (an empty IP set), 5 SQL injection rule set, 6 Known Bad Inputs, 7 `rate-limit-per-ip` blocking above 2000 requests per client IP over the default 300-second window ([AWS: rate-based rules](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-high-level-settings.html)). A blocked request gets 403.
 - Logs: access logs to `<edge-log-bucket>` under `logs/`; WAF logs through Kinesis Data Firehose (encrypted) to the same bucket under `waf-logs/`, with the user-agent header redacted. The bucket blocks public access and expires objects after 180 days.
 
@@ -350,7 +350,7 @@ The internal ALB's host pattern `*.internal.prod.innovate.example` has no record
 
 **Internal ALB** (`prod01-us-east-1/internal-alb`). `prod01-us-internal-alb` sits in the private subnets with one HTTP listener on 80: a default fixed 404 with a JSON body, and a rule for `*.internal.prod.innovate.example` (the fallback while `internal_ingress_hosts` is empty) to `prod01-us-internal-ingress`, which only the kept-out Traefik stack fills. Only clients inside the VPC reach it; it has no access logs and no WAF.
 
-**CloudFront and the web bucket** (`global/frontend`, applied by name with `./tfctl.sh global apply frontend`).
+**CloudFront and the web bucket** (`global/frontend`, applied by hand: `cd global/frontend && ../init.sh && terraform apply`).
 
 - Distribution: aliases `web.` and the apex; minimum protocol `TLSv1.2_2021`, SNI only; IPv6 off; `PriceClass_100`; default root object `index.html`; one cache behavior (GET and HEAD, `redirect-to-https`, compression on, `Managed-CachingOptimized`).
 - Single-page app routing: 403 and 404 from the origin become `/index.html` with status 200, cached for 0 seconds, so client-side routes load.
@@ -417,7 +417,7 @@ The components tier applies nine stacks in this order (`cluster/eks/components/s
 | `aws-load-balancer-controller` | Chart 3.5.0 with its CRDs; ingress class `alb`; TargetGroupBindings | Pod Identity |
 | `external-dns` | Chart 1.22.0; `upsert-only` on the public zone only, owner ID `prod01-us-eks`; sources Ingress and Service | Pod Identity; `route53:ChangeResourceRecordSets` on the public zone only |
 | `argocd` | Argo CD chart 10.9.4 at `argocd.prod.innovate.example` behind the Ingress ALB; TLS ends at the ALB; two replicas of the controller, server and repo server | Built-in `admin`, no SSO |
-| `argocd-configuration` | Repository Secret for of-helm; AppProject `opsfleet` (destinations `argocd`, `of`, `example-api`, `of-load`); Application `of-api` | |
+| `argocd-configuration` | Repository Secret for of-helm; AppProject `opsfleet` (destinations `argocd`, `of`, `of-api`, `of-load`); Application `of-api` | |
 
 Two stacks stay out of the rollout and are Not built yet: `keda` (KEDA chart 2.21.0, an example that scales on ALB requests per minute) and `traefik-NOTUSED` (Traefik behind both Terraform ALBs).
 
@@ -426,14 +426,14 @@ Two stacks stay out of the rollout and are Not built yet: `keda` (KEDA chart 2.2
 | Workload | Namespace | Chart and source | Replicas and scaling | Requests and limits | Nodes |
 |---|---|---|---|---|---|
 | of-api (Flask API) | `of` | of-helm `charts/of-api` 0.2.0 with `values.yaml`, `values-opsfleet.yaml`, `values-graviton.yaml`, Argo CD Application `of-api` | 2; HPA 2 to 5 at 70 percent CPU | 100m CPU and 128Mi requested; 256Mi memory limit, no CPU limit | Graviton |
-| example-api (sample service) | `example-api` | of-helm `charts/example-api`, written by `app-services/example-api` (module `kubernetes/services/service-0.3`) | 2; HPA 2 to 5 at 70 percent CPU | 100m CPU and 128Mi requested; 256Mi memory limit | x86 (`values-amd64.yaml`) |
+| of-api (sample service) | `of-api` | of-helm `charts/of-api`, written by `app-services/of-api` (module `kubernetes/services/service-0.3`) | 2; HPA 2 to 5 at 70 percent CPU | 100m CPU and 128Mi requested; 256Mi memory limit | x86 (`values-amd64.yaml`) |
 | of-load (stress service) | `of-load` | of-helm `charts/of-load`, written by `app-services/of-load` (module `kubernetes/services/service-0.4`) | 2; HPA 2 to 20 at 70 percent CPU or 75 percent memory | 1 CPU and 256Mi requested; 1 CPU and 1Gi limits | Graviton (`values-arm64.yaml`) |
 
 All three run as non-root with a read-only root file system, all capabilities dropped and the `RuntimeDefault` seccomp profile, with a PodDisruptionBudget of one unavailable pod and liveness and readiness probes on `/healthz`. of-api also runs an `init-db` init container and mounts its database secret through the Secrets Store CSI driver (section 5.1). The service modules create the target group, the host rule, the certificate, the A record, the security group rule, the namespace, the chart commit to of-helm and the Argo CD Application; they create no ECR repository and no IAM role, and the charts' image values are still `CHANGEME`.
 
 ### 8.5 Scaling
 
-- **Pods.** Each chart ships an HPA (`autoscaling/v2`) that reads pod CPU and memory use from metrics-server and moves the replica count between its bounds (table above). Argo CD ignores the replica count of example-api and of-load, so the HPA owns it.
+- **Pods.** Each chart ships an HPA (`autoscaling/v2`) that reads pod CPU and memory use from metrics-server and moves the replica count between its bounds (table above). Argo CD ignores the replica count of of-api and of-load, so the HPA owns it.
 - **Nodes.** When pods are pending, Karpenter launches a node that fits them, Spot first, within each pool's CPU limit (100 vCPU for `x86`, 50 vCPU for `graviton`); when nodes are empty or underused, it consolidates them after one minute. Interruption warnings reach Karpenter through the SQS queue. The two managed node groups do not scale.
 - **Event-driven scaling.** KEDA scaling on ALB requests per minute is an example in code, kept out of the rollout: Not built yet.
 - **Database.** Aurora Serverless v2 scales its own capacity (section 10).
@@ -476,7 +476,7 @@ GitHub Actions tests each service, builds its image once per architecture and pu
 | This repository | Terraform and this document | `.github/workflows/terraform.yml` |
 | of-api | Flask API, Dockerfile | `ci.yml`, committed by `system/ecr/of-api` |
 | of-web | React single-page app | `ci.yml`, committed by `global/frontend` |
-| of-helm | Helm charts: `of-api`, plus `example-api` and `of-load` written by Terraform | `ci.yml` (lint only) |
+| of-helm | Helm charts: `of-api` and `of-load`, written by Terraform | `ci.yml` (lint only) |
 | of-load | Rust stress service | `ci.yml`, committed by `system/ecr/of-load` |
 | of-launch | Deploy dashboard | `deploy.yml`, from a separate infrastructure repository |
 | dev-lane | Local Docker Compose lane | None; never deployed |
@@ -492,9 +492,9 @@ GitHub Actions tests each service, builds its image once per architecture and pu
 
 All use AES256 encryption and no repository policy, so only this account pulls. Nodes pull with their role's ECR read policy. No workflow pushes to `helm-charts/of-api` yet: chart publishing is Not built yet.
 
-**Helm charts.** of-helm holds `charts/of-api` (templates for the Deployment, HPA, Ingress, PodDisruptionBudget, SecretProviderClass, Service and ServiceAccount) and its values files. Its workflow installs Helm v4.3.0 and kubeconform v0.8.0, each checked against a pinned SHA-256, runs `helm lint` and validates every values file with `kubeconform -strict` against Kubernetes 1.36.0. The example-api and of-load stacks commit their charts to of-helm (`charts/example-api`, `charts/of-load`) and then leave later content changes alone.
+**Helm charts.** of-helm holds `charts/of-api` (templates for the Deployment, HPA, Ingress, PodDisruptionBudget, SecretProviderClass, Service and ServiceAccount) and its values files. Its workflow installs Helm v4.3.0 and kubeconform v0.8.0, each checked against a pinned SHA-256, runs `helm lint` and validates every values file with `kubeconform -strict` against Kubernetes 1.36.0. The of-api and of-load stacks commit their charts to of-helm (`charts/of-api`, `charts/of-load`) and then leave later content changes alone.
 
-**Argo CD.** Argo CD watches of-helm `master` and syncs each Application automatically, with prune and self-heal: `of-api` into `of`, `prod01-us-example-api` into `example-api`, `prod01-us-of-load` into `of-load`, all under the AppProject `opsfleet`.
+**Argo CD.** Argo CD watches of-helm `master` and syncs each Application automatically, with prune and self-heal: `of-api` into `of`, `prod01-us-of-api` into `of-api`, `prod01-us-of-load` into `of-load`, all under the AppProject `opsfleet`.
 
 **Release path, backend.**
 
@@ -511,7 +511,7 @@ All use AES256 encryption and no repository policy, so only this account pulls. 
 3. CodeQL, dependency review (pull requests), Snyk and zizmor check the code and the workflow.
 4. `deploy`, on `master` and one run at a time, syncs `assets/` with a one-year immutable cache, the rest without `index.html`, then `index.html` with `no-cache, no-store, must-revalidate`, and invalidates `/*` on CloudFront.
 
-**Infrastructure pipeline** (`.github/workflows/terraform.yml`). An operator dispatches it with a tier, a stack and an apply box. The `plan` job authenticates to Vault with GitHub's JWT, reads the common and per-stack values, assumes the plan role and runs `./tfctl.sh <tier> plan <stack>` from `terraform/` for system tiers or from `environments/innovate-inc/` otherwise; the summary keeps only resource addresses and totals. With the box ticked, the `apply` job waits for approval on the environment `terraform`, assumes the apply role and runs `./tfctl.sh <tier> apply <stack> --auto-approve`. Locally the operator runs the same `tfctl.sh` (section 13).
+**Infrastructure pipeline** (`.github/workflows/terraform.yml`). An operator dispatches it with a tier, a stack and an apply box. The `plan` job authenticates to Vault with GitHub's JWT, reads the common and per-stack values, assumes the plan role and runs `./tfctl.sh <tier> plan <stack>` from `terraform/` for a system tier, or the tier's `init.sh` and `terraform plan` in `environments/innovate-inc/<tier>/<stack>` otherwise; the summary keeps only resource addresses and totals. With the box ticked, the `apply` job waits for approval on the environment `terraform`, assumes the apply role and runs the same with `apply` and auto-approve. Locally the operator runs `tfctl.sh` (section 13).
 
 **Gates.**
 
@@ -572,7 +572,7 @@ Other production settings the module already accepts: `allowed_security_group_id
 
 ### 10.4 How the second region takes over
 
-The us-west-2 tier is on the rollout: its network, EKS, components, example-api and CI roles are Built, and its Aurora secondary is Not built yet. Aurora never promotes a secondary region by itself; an operator or an automation must call it:
+The us-west-2 tier is on the rollout: its network, EKS, components, of-api and CI roles are Built, and its Aurora secondary is Not built yet. Aurora never promotes a secondary region by itself; an operator or an automation must call it:
 
 ```bash
 aws rds switchover-global-cluster --region us-east-1 \
@@ -598,7 +598,7 @@ To switch Aurora on, replace the commented line in `prod01-us-east-1/stacks` wit
 
 ## 11. Security
 
-Data at rest is encrypted with AWS managed keys everywhere except the managed node groups' root volumes, traffic is TLS at every public edge, and access is least privilege by IAM role and Kubernetes namespace; detection services and organization guardrails belong to the proposal and are Not built yet.
+Data at rest is encrypted with AWS managed keys everywhere except the managed node groups' root volumes, traffic is TLS at every public edge, and access is least privilege by IAM role and Kubernetes namespace; detection services and the organization policies belong to the proposal and are Not built yet.
 
 **Encryption at rest.**
 
@@ -657,7 +657,7 @@ The proposal keeps two kinds of data apart (Not built yet). Monitoring, what on-
 
 ## 13. Infrastructure as code
 
-Everything in sections 4 to 12 that is marked Built comes from Terraform 1.16.0 stacks under `terraform/`, grouped into tiers that two `tfctl.sh` scripts apply in a fixed order, with state in one S3 bucket.
+Everything in sections 4 to 12 that is marked Built comes from Terraform 1.16.0 stacks under `terraform/`, grouped into tiers that two `tfctl.sh` scripts apply in a fixed order, one for the system tiers and one started per region, with state in one S3 bucket.
 
 **Layout.**
 
@@ -669,19 +669,18 @@ terraform/
   README.md               cluster build and the x86 or Graviton pod example
   system/                 account-wide stacks: s3, r53, iam, ssh-key, github, ecr, access
   environments/innovate-inc/
-    rollout               environment tiers, in apply order
-    tfctl.sh              runs the environment tiers
+    tfctl.sh              runs one region: the shared stacks it needs, then its tiers
     global/               global-accelerator, frontend
-    prod01-us-east-1/     network, edge, internal-alb, aurora; cluster/; cluster/eks/components/; app-services/; ci/
-    prod01-us-west-2/     the same tiers for us-west-2
+    prod01-us-east-1/     tfctl.sh and rollout for the region; network, edge, internal-alb, aurora; cluster/; cluster/eks/components/; app-services/; ci/
+    prod01-us-west-2/     the same for us-west-2
   modules/                <area>/<name>-<version>, for example network/network-1.4.1
 ```
 
-**Stacks and tiers.** A stack is one Terraform root with its own state. A tier is a folder of stacks that share its `init.sh`, `provider.tf.tmpl` and `shared-variables.tf`; its `stacks` file lists the stacks in apply order, a `manual` file lists stacks that run only by name, and `rollout` lists the tiers in order. `init.sh` renders the stack's `provider.auto.tf` from the template with `envsubst` (state bucket, key prefix, bucket region, environment, region, folder names), links the shared variables and the tier's git-ignored `secrets.auto.tfvars`, then runs `terraform fmt` and `terraform init`. `tfctl.sh` runs it before every verb. Every template pins Terraform 1.16.0 and the AWS provider 6.66.0.
+**Stacks and tiers.** A stack is one Terraform root with its own state. A tier is a folder of stacks that share its `init.sh`, `provider.tf.tmpl` and `shared-variables.tf`; its `stacks` file lists the stacks in apply order, and a `rollout` file (`terraform/rollout` for the system tiers, `<region>/rollout` for a region) lists the tiers in order. `init.sh` renders the stack's `provider.auto.tf` from the template with `envsubst` (state bucket, key prefix, bucket region, environment, region, folder names), links the shared variables and the tier's git-ignored `secrets.auto.tfvars`, then runs `terraform fmt` and `terraform init`. `tfctl.sh` runs it before every verb. Every template pins Terraform 1.16.0 and the AWS provider 6.66.0.
 
 **State backend.** One S3 bucket, `<state-bucket>`, in the region `STATE_BUCKET_REGION` names. Keys follow the code layout: `<prefix>/system/<category>/<stack>/<stack>.tfstate` and `<prefix>/environments/<environment>/<path>/<stack>.tfstate`, with `encrypt` on. The backend sets no lock, so two applies of the same stack can overlap: Not built yet (`use_lockfile`). The `system/s3/state-bucket` stack either creates the bucket or reads an existing one (`TF_VAR_create_state_bucket`), and keeps its own state on the operator's machine under `${XDG_STATE_HOME:-$HOME/.local/state}/opsfleet/`.
 
-**`tfctl.sh`.** Both scripts take the same verbs:
+**`tfctl.sh`.** The system script, `terraform/tfctl.sh`:
 
 ```bash
 ./tfctl.sh <tier> validate|plan|apply|output|destroy|status [stack|all] [--from <stack>] [--auto-approve] [--durable]
@@ -691,18 +690,27 @@ terraform/
 ./tfctl.sh order
 ```
 
-`roll` applies every stack of every tier in order and `unroll` destroys them in reverse; `check` runs `terraform validate` on every stack after an init that skips the backend, so it calls no AWS API; `status` reports clean, drifted or not deployed per stack; after a failure, `roll`, `unroll` and `check` print the `--from` line that resumes at the failed stack. A destroy is refused while a later stack still holds resources, and tiers listed in `durable` (every system tier) need `--durable`.
+`roll` applies every stack of every system tier in order and `unroll` destroys them in reverse; `check` runs `terraform validate` on every stack after an init that skips the backend, so it calls no AWS API; `status` reports clean, drifted or not deployed per stack; after a failure, `roll`, `unroll` and `check` print the `--from` line that resumes at the failed stack. A destroy is refused while a later stack still holds resources, and tiers listed in `durable` (every system tier) need `--durable`.
+
+The region script, `environments/innovate-inc/<region>/tfctl.sh`, starts `environments/innovate-inc/tfctl.sh` for its own folder:
+
+```bash
+./tfctl.sh apply|plan|destroy [<stack>|all] [--from <stack>] [--auto-approve]
+./tfctl.sh order
+```
+
+A stack is its path under the region (`network`, `cluster/eks`, `cluster/eks/components/karpenter`, `app-services/of-load`). `apply` walks two shared stacks first, the hosted zones (`system/r53/opsfleet`) and `global/global-accelerator`, each applied only when its plan shows changes, so the first region creates them and the second finds them and moves on; then the region's tiers in `rollout` order. `destroy` walks the same list backwards and keeps a shared stack while another region, or `global/frontend` for the zones, still holds resources. A destroy is refused while a later stack still holds resources, and a failed walk prints the `--from` line that resumes at the failed stack. The region script never touches the system tiers, `ci/` or `global/frontend`.
 
 **Rollout order.**
 
 - System (`terraform/rollout`): `system/s3` (state-bucket, ansible-bucket, artifact-bucket, backup-bucket), `system/r53` (opsfleet), `system/iam` (github-oidc, terraform-ci), `system` (ssh-key), `system/github` (of-web, of-api, of-helm), `system/ecr` (of-api, of-load, frontend-web, helm-charts), `system/access` (developers).
-- Environment (`environments/innovate-inc/rollout`): `global` (global-accelerator; frontend by name), `prod01-us-east-1` (network, edge, internal-alb), `prod01-us-east-1/cluster` (eks), `prod01-us-east-1/cluster/eks/components` (the nine stacks), `prod01-us-east-1/app-services` (example-api, of-load), `prod01-us-east-1/ci` (roles, github-actions), then the same five tiers for `prod01-us-west-2`, whose `ci/github-actions` runs by name.
+- Region (`environments/innovate-inc/<region>/rollout`, the same in both): the shared `system/r53/opsfleet` and `global/global-accelerator` when their plans show changes, then `.` (network, edge, internal-alb), `cluster` (eks), `cluster/eks/components` (the nine stacks) and `app-services` (of-api and of-load in us-east-1, of-api in us-west-2). `global/frontend` and each region's `ci` (roles, github-actions) are in no rollout and run by hand: `cd <stack> && ../init.sh && terraform apply`.
 
-**Module versions.** A module folder carries its version in its name, and each stack pins one version by its `source` path, so a new version sits beside the old one and only the stacks that move to it change. Several versions sit side by side today: `kubernetes/services/service-0.3`, `service-0.3.1` and `service-0.4` (us-east-1 example-api, us-west-2 example-api and of-load); `aurora/aurora-1.2.1` and `aurora-1.3.0`; `loadbalancer/alb-09`, `alb-09.1` and `alb-09.2`; `network/network-1.4-merged` and `network-1.4.1`.
+**Module versions.** A module folder carries its version in its name, and each stack pins one version by its `source` path, so a new version sits beside the old one and only the stacks that move to it change. Several versions sit side by side today: `kubernetes/services/service-0.3`, `service-0.3.1` and `service-0.4` (us-east-1 of-api, us-west-2 of-api and of-load); `aurora/aurora-1.2.1` and `aurora-1.3.0`; `loadbalancer/alb-09`, `alb-09.1` and `alb-09.2`; `network/network-1.4-merged` and `network-1.4.1`.
 
 **Site values.** The env file sets `STATE_BUCKET`, `STATE_BUCKET_REGION`, `STATE_KEY_PREFIX`, `AWS_PROFILE`, `GITHUB_TOKEN` and the `TF_VAR_*` values: `create_state_bucket`, `ansible_bucket_name`, `parent_zone_name` (an existing public zone), `domain_name` (a subdomain of it), `bastion_public_key`, `create_provider`, `github_owner`, `edge_log_bucket_name`, `web_bucket_name` and `log_bucket_name`. Each stack's sensitive variables come from its tier's `secrets.auto.tfvars`; the values still marked `CHANGEME` in the tree are listed by `grep -rl CHANGEME --exclude=README.md .` from `terraform/`.
 
-**Build everything from zero, in command order.** `system/access` reads the us-east-1 cluster's state, so it runs after the environment tiers; the rest of the system tiers run first.
+**Build everything from zero, in command order.** `system/access` reads the us-east-1 cluster's state, so it runs after that region; the rest of the system tiers run first.
 
 ```bash
 cd terraform
@@ -712,20 +720,22 @@ for tier in system/s3 system/r53 system/iam system system/github system/ecr; do
   ./tfctl.sh "$tier" apply all
 done
 
-cd environments/innovate-inc
+cd environments/innovate-inc/prod01-us-east-1
 ./tfctl.sh order
-./tfctl.sh check
-./tfctl.sh roll
-./tfctl.sh global apply frontend
+./tfctl.sh apply
+(cd ../global/frontend && ../init.sh && terraform apply)
 
-cd ../..
+cd ../prod01-us-west-2
+./tfctl.sh apply
+
+cd ../../..
 ./tfctl.sh system/access apply all
 ./tfctl.sh system/access output developers
 ```
 
-`./tfctl.sh prod01-us-west-2/ci apply github-actions`, run from `environments/innovate-inc`, points the of-api and of-helm pipelines at the us-west-2 roles: both regions write the same repository-level secret and variables, and the last apply wins. Turning Aurora on is in section 10.4. The same steps run one stack at a time from GitHub Actions through `terraform.yml` (section 9).
+Each region's `ci` stacks run by hand the same way, `roles` then `github-actions`; the us-west-2 `github-actions` points the of-api and of-helm pipelines at the us-west-2 roles, because both regions write the same repository-level secret and variables and the last apply wins. Turning Aurora on is in section 10.4. The same steps run one stack at a time from GitHub Actions through `terraform.yml` (section 9).
 
-**Tear down.** `./tfctl.sh unroll` from `environments/innovate-inc` destroys the environment tiers bottom up (us-west-2, then us-east-1, then global; in each region ci, app-services, components, eks, internal-alb, edge, network). The system tiers are durable: `unroll` keeps them, and each needs `./tfctl.sh <tier> destroy all --durable`, with `system/access` first and `system/s3` last.
+**Tear down.** `./tfctl.sh destroy` in a region folder destroys that region bottom up (app-services, components, eks, internal-alb, edge, network), then `global/global-accelerator` and the hosted zones unless the other region, or `global/frontend` for the zones, still holds resources; `ci` and `global/frontend` are destroyed by hand first. The system tiers are durable: `unroll` keeps them, and each needs `./tfctl.sh <tier> destroy all --durable`, with `system/access` first and `system/s3` last.
 
 ## 14. Future work (Not built yet)
 
@@ -733,7 +743,7 @@ Each row is Not built yet; the source names the section of this document, the co
 
 | Item | What it adds | Source |
 |---|---|---|
-| AWS Organization with eight accounts in five OUs, Control Tower, the `org/` stack and the account baseline | Hard boundaries between environments, separate bills and quotas, organization-wide guardrails | Section 4.2 |
+| AWS Organization with eight accounts in five OUs, Control Tower, the `org/` stack and the account baseline | Hard boundaries between environments, separate bills and quotas, organization policies no account administrator can undo | Section 4.2 |
 | IAM Identity Center with Google Workspace, permission sets and `BreakGlass` | No long-lived keys for people, MFA at the IdP, time-boxed production writes | Section 5.2 |
 | `dns-writer` role in Shared Services | Parent-zone changes from a workload account without an operator in Shared Services | Section 5.2 |
 | `aws:MultiFactorAuthPresent` in the deploy role trust | MFA on today's developer path until Identity Center exists | Section 5.1; `system/access/developers/files/trust/account.json` |
@@ -761,3 +771,112 @@ Each row is Not built yet; the source names the section of this document, the co
 | `DEPLOY_ENABLED` read by the workflows Terraform commits | A switch that stops publishing without editing workflows | Section 9; `prod01-us-east-1/ci/github-actions` |
 | Reserved OUs (Sandbox, PolicyStaging, Suspended) | Room for experiments, safe policy rollout, account closure | Section 4.2 |
 | Network account with a Transit Gateway, a Data OU, a prod-data account, an observability account, Account Factory for Terraform | Growth paths, each on its trigger | Section 4.2, "When the structure grows" |
+
+## 15. Glossary
+
+Abbreviations and names used in this document, with what each means here.
+
+| Term | Stands for and what it is here |
+|---|---|
+| Access entry | EKS's list of which IAM roles may call the cluster API and with which Kubernetes rights |
+| ACL | Access control list; a network ACL filters a subnet, a web ACL is a WAF rule set, S3 ACLs are switched off by "bucket owner enforced" |
+| ACM | AWS Certificate Manager; issues and renews the TLS certificates on CloudFront and the ALBs |
+| ACU | Aurora capacity unit, about 2 GiB of memory with matching CPU; Serverless v2 scales between a minimum and a maximum count |
+| Add-on | A cluster component EKS installs and upgrades: `vpc-cni` (pod networking), `coredns` (cluster DNS), `kube-proxy` (service routing), pod-identity-agent |
+| ALB | Application Load Balancer; the public ALB behind the accelerator, the internal ALB, and the Ingress ALB the load balancer controller builds |
+| AMI | Amazon Machine Image, the disk image a node boots from; `al2023@latest` is the newest Amazon Linux 2023 |
+| Argo CD | GitOps controller inside the cluster; pulls the of-helm repository and applies what it finds |
+| ARN | Amazon Resource Name, the full identifier of an AWS resource |
+| AZ | Availability Zone, one data-center group in a region; Multi-AZ means copies in two or more |
+| Baseline | The Terraform module applied to every new account: default VPC removed, encryption defaults, OIDC provider, deploy role, budget, tags |
+| Bastion | The one EC2 host in the VPC an operator reaches through SSM Session Manager to get at private resources |
+| BreakGlass | The time-boxed, paged permission set for writes in Staging and Prod |
+| CD | Continuous delivery; here Argo CD pulling the GitOps repository into the cluster |
+| CHANGEME | Placeholder for a site value that must be set before an apply |
+| CI | Continuous integration; the GitHub Actions workflows that test, build, push images and run Terraform |
+| CloudFront | AWS content delivery network; serves the web app from S3 with WAF and Lambda@Edge in front |
+| CMK | Customer managed key, a KMS key the account creates and controls, unlike an AWS-managed key |
+| Control Tower | AWS service that creates and governs the organization: landing zone, OUs, account vending, organization policies |
+| CRD | Custom resource definition; teaches Kubernetes a new object type such as NodePool or TargetGroupBinding |
+| CSI | Container Storage Interface; the EBS CSI driver gives pods volumes, the Secrets Store CSI driver mounts Secrets Manager values |
+| Delegated administrator | The member account that runs an organization-wide service (GuardDuty, Security Hub, Identity Center) instead of Management |
+| Digest | The SHA-256 hash of an image; pulling by digest pins the exact image, a tag can be moved |
+| DKIM, DMARC, MX, SPF | Mail DNS records: who signs mail, what to do with failures, which servers accept mail, who may send; the zones set all four to refuse mail |
+| DNS | Domain Name System; Route 53 holds the zones |
+| DR | Disaster recovery; the second region and the Backup account |
+| EBS | Elastic Block Store, the node and pod disks; gp3 is its general-purpose volume type |
+| EC2 | Elastic Compute Cloud, the virtual machines nodes run on |
+| EC2NodeClass | Karpenter object naming the AMI, subnets, security groups, role and disk a launched node gets |
+| ECR | Elastic Container Registry; holds the images and OCI charts |
+| EKS | Elastic Kubernetes Service, the managed Kubernetes cluster |
+| EventBridge | AWS event bus; forwards Spot, health and state-change events to Karpenter's SQS queue |
+| external-dns | Controller that writes Route 53 records for Kubernetes Ingresses and Services |
+| F1 to F16 | The sixteen cross-account flows numbered in the organization diagram (section 4.2) |
+| Flow Logs | VPC records of connections; here rejected traffic only |
+| GitOps | Cluster state declared in a Git repository and pulled by a controller, not pushed by a pipeline |
+| Global Accelerator | Static anycast IP addresses in front of each region's public ALB, with health-based failover between regions |
+| Graviton | AWS's ARM CPUs (arm64); x86 and amd64 mean Intel and AMD |
+| GuardDuty, Security Hub, Inspector, Macie, Config, Access Analyzer | AWS detective services: threat findings, finding aggregation and checks, vulnerability scans, sensitive-data discovery, configuration history, unintended-access analysis |
+| Helm, chart | Kubernetes package manager; a chart is a templated set of manifests driven by a values file |
+| HPA | Horizontal Pod Autoscaler; adds or removes pods on CPU or memory from metrics-server |
+| HSTS | HTTP Strict Transport Security, a response header telling browsers to use HTTPS only |
+| IAM | Identity and Access Management: roles, policies and, today, users and groups |
+| Identity Center | IAM Identity Center, formerly AWS SSO; one sign-in through the IdP, then a permission set per account |
+| IdP | Identity provider; the company directory where logins, passwords and MFA live, e.g. Google Workspace, Okta or Microsoft Entra |
+| IMDSv2 | Instance Metadata Service version 2, the token-protected way a node reads its metadata and credentials; the hop limit decides whether pods can reach it |
+| Ingress | Kubernetes object asking for HTTP routing; the AWS Load Balancer Controller builds the Ingress ALB for it |
+| IOPS | Input/output operations per second, disk performance |
+| IRSA | IAM Roles for Service Accounts, the older way to give a pod a role through the cluster's OIDC provider; replaced here by Pod Identity |
+| JWT | JSON Web Token, the signed token GitHub Actions presents to AWS and to Vault |
+| Karpenter | Node autoscaler; launches EC2 instances for pending pods and removes them when empty |
+| KEDA | Kubernetes Event-driven Autoscaling; scales pods on external metrics such as ALB requests per minute |
+| KMS | Key Management Service, the encryption keys |
+| Lambda@Edge | Code CloudFront runs at its edge locations; here it adds the security headers |
+| Landing zone | Control Tower's starting setup: the organization, the Security OU accounts, logging and the organization policies |
+| Managed node group | EKS-managed set of EC2 nodes; here the system nodes the controllers run on |
+| metrics-server | Collects pod and node CPU and memory for the HPAs and `kubectl top` |
+| MFA | Multi-factor authentication |
+| NAT gateway | Lets private subnets reach the internet outbound while staying unreachable inbound |
+| NodePool | Karpenter object: the instance types, capacity types, architecture, limits and taint a set of nodes may use |
+| NS record | Name-server record; delegates a subzone to another zone's servers |
+| OAC | Origin access control; lets only the CloudFront distribution read the S3 bucket |
+| Object Lock | S3 setting that blocks deleting or changing objects for a retention period |
+| OCI | Open Container Initiative, the image format; OCI charts are Helm charts stored in a registry like images |
+| OIDC | OpenID Connect; GitHub Actions gets AWS credentials with a signed token instead of stored keys |
+| On-Demand, Spot | EC2 pricing: On-Demand is full price and stays; Spot is spare capacity at a discount that AWS reclaims with two minutes' warning |
+| OU | Organizational unit, a folder of accounts in an AWS Organization that policies attach to |
+| PCI, SOC 2, HIPAA | Compliance regimes: card payments, service-organization controls, US health data |
+| PDB | PodDisruptionBudget; how many pods of a Deployment may be down while nodes drain |
+| Permission set | Identity Center's role template; becomes a role in each account it is assigned to |
+| Pod Identity | EKS Pod Identity; binds a Kubernetes service account to an IAM role through the pod-identity agent, no OIDC trust per role |
+| PrivateLink, VPC endpoint | Private path to an AWS service or another VPC without the internet; an interface endpoint is a network interface in the VPC, a gateway endpoint a route-table entry |
+| RAM | Resource Access Manager; shares resources such as a Transit Gateway across accounts |
+| RCP | Resource control policy; organization policy on the resource side (S3, KMS, Secrets Manager, SQS, STS) limiting who may call it |
+| RDS, Aurora | Relational Database Service; Aurora is its PostgreSQL-compatible engine, Serverless v2 scales its capacity, a global database replicates to another region |
+| Route 53 | AWS DNS; the hosted zones and their records |
+| RPO, RTO | Recovery point objective, the data a failover may lose; recovery time objective, how long until service is back |
+| S3 | Simple Storage Service, the buckets |
+| SAML, SCIM | Standards between Identity Center and the IdP: SAML for sign-in, SCIM for syncing users and groups |
+| SBOM | Software bill of materials, the list of packages in an image |
+| SCP | Service control policy; organization-wide rule that caps what anyone in an account may do, inherited down the tree, never applied to Management (section 4.2) |
+| Secrets Manager | AWS secret store; the Secrets Store CSI driver mounts its values into pods |
+| Security group | Stateful firewall on an instance, ALB or pod network interface |
+| SIEM | Security information and event management, the tool that collects and correlates security logs |
+| SQS | Simple Queue Service; Karpenter's interruption queue |
+| SSE, SSE-S3 | Server-side encryption; SSE-S3 uses keys S3 manages |
+| SSM | Systems Manager; Session Manager opens a shell on the bastion with no SSH port open |
+| SSO | Single sign-on |
+| STS | Security Token Service; issues the short-lived credentials behind every assumed role |
+| Taint | Node mark that keeps pods away unless they tolerate it; the Graviton pool is opt-in through its taint |
+| Target group | The set of targets, here pod IPs, an ALB listener rule sends traffic to |
+| TargetGroupBinding | Load balancer controller object that registers a Service's pods in an existing target group |
+| Tier, stack, module, rollout | Terraform layout: a stack is one root with its own state, a tier a folder of stacks sharing one `init.sh`, a module a building block under `modules/`, `rollout` the apply order (section 13) |
+| TLS | Transport Layer Security, the HTTPS encryption; the TLS 1.2 and 1.3 policies name the allowed versions |
+| Traefik | Ingress proxy; its stack is kept out of the rollout |
+| Transit Gateway | Hub that routes between VPCs and on-premises; not used, nothing needs VPC-to-VPC traffic |
+| TTL | Time to live, how long a DNS answer may be cached |
+| Vault | HashiCorp Vault; the secret store the Terraform workflow reads through a JWT mount |
+| VPC | Virtual Private Cloud, the private network with its subnets |
+| WAF | Web Application Firewall; rule sets on CloudFront and the public ALB |
+| Write forwarding, traffic dial | Aurora global database option that sends writes on the secondary to the primary; Global Accelerator's per-region traffic percentage |
+| XSS | Cross-site scripting; `X-XSS-Protection` is one of the headers Lambda@Edge adds |
