@@ -77,8 +77,3 @@ variable "seed_user_password" {
   type        = string
   sensitive   = true
 }
-
-variable "db_migrate" {
-  description = "Run the chart's schema step before each sync; true only in the region that holds the database writer"
-  type        = bool
-}

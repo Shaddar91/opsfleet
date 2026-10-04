@@ -26,5 +26,5 @@ module "service" {
   namespace                  = var.namespace
   architecture               = var.architecture
   image_repository           = local.ecr_repository_url
-  argo_template_vars         = { DB_SECRET_NAME = local.db_secret_name, AWS_REGION = var.region, DB_MIGRATE = var.db_migrate }
+  argo_template_vars         = { DB_SECRET_NAME = local.db_secret_name, AWS_REGION = var.region }
 }
