@@ -26,6 +26,8 @@ spec:
             name: "${DB_SECRET_NAME}"
         keda:
           awsRegion: "${AWS_REGION}"
+        dbMigrate:
+          enabled: ${DB_MIGRATE}
   destination:
     server: https://kubernetes.default.svc
     namespace: ${NAMESPACE}

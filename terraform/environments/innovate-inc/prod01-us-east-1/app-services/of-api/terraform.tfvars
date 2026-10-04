@@ -15,3 +15,4 @@ argocd_project             = "opsfleet"
 web_subdomain              = "web"
 token_ttl_seconds          = 3600
 seed_user                  = "demo"
+db_migrate                 = true
