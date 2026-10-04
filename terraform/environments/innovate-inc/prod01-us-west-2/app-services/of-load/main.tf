@@ -7,6 +7,7 @@ module "service" {
   custom_target_group_binding = false
   create_certificate          = true
   create_security_group_rule  = false
+  create_record               = false
 
   environment           = var.environment
   application           = var.application

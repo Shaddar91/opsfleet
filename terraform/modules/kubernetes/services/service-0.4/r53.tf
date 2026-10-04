@@ -2,6 +2,7 @@
 
 module "record" {
   source       = "../../../r53/r53-1.2-merged"
+  count        = var.create_record ? 1 : 0
   alias        = true
   health_check = true
 
@@ -10,6 +11,12 @@ module "record" {
   type_of_dns_record = "A"
   resource_alias     = var.alias_target_dns_name
   resource_zone      = var.alias_target_zone_id
+}
+
+//records created before create_record existed keep their place in state
+moved {
+  from = module.record
+  to   = module.record[0]
 }
 
 module "certificate" {
