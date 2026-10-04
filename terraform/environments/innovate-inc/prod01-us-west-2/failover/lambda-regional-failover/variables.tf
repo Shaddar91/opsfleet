@@ -42,3 +42,8 @@ variable "memory_size" {
   description = "Memory of the function in MB"
   type        = number
 }
+
+variable "primary_unhealthy_minutes" {
+  description = "Consecutive minutes the accelerator must report no healthy endpoint in the primary region before the alarm fires and invokes the function"
+  type        = number
+}

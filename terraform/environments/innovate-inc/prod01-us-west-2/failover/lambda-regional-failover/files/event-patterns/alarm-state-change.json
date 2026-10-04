@@ -1,0 +1,5 @@
+{
+  "source": ["aws.cloudwatch"],
+  "detail-type": ["CloudWatch Alarm State Change"],
+  "resources": ["${ALARM_ARN}"]
+}

@@ -9,3 +9,15 @@ locals {
     "endpoint_group_arn.${var.standby_region}" = local.standby_endpoint_group_arn
   }
 }
+
+locals {
+  trigger_name = "${var.environment}-failover-regional-${var.primary_region}-unhealthy"
+
+  #Global Accelerator metrics take the accelerator and listener ids, the path segments of the endpoint group ARN the function fences
+  primary_endpoint_group_path = split("/", local.primary_endpoint_group_arn)
+  primary_endpoint_group_dimensions = {
+    Accelerator   = local.primary_endpoint_group_path[1]
+    Listener      = local.primary_endpoint_group_path[3]
+    EndpointGroup = var.primary_region
+  }
+}
