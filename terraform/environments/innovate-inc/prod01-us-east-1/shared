@@ -1,0 +1,3 @@
+#shared stacks this region applies and destroys, relative to this folder, in apply order; a region without this file never touches them
+../../../system/r53/opsfleet
+../global/global-accelerator

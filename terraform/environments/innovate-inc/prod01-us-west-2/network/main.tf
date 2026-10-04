@@ -30,7 +30,7 @@ module "network" {
     ANSIBLE_BUCKET = local.ansible_bucket_name
     ROLES_KEY      = aws_s3_object.bastion_roles.key
     PLAYBOOK_KEY   = aws_s3_object.bastion_playbook.key
-    AWS_REGION     = var.region
+    AWS_REGION     = local.ansible_bucket_region
     ANSIBLE_REV    = sha256(join("", [data.archive_file.bastion_roles.output_sha256, filesha256(local.bastion_playbook)]))
   })
 }

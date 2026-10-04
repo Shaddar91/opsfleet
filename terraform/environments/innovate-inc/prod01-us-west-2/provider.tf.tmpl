@@ -49,8 +49,9 @@ data "terraform_remote_state" "ansible_bucket" {
 }
 
 locals {
-  ansible_bucket_name = data.terraform_remote_state.ansible_bucket.outputs.bucket_name
-  ansible_bucket_arn  = data.terraform_remote_state.ansible_bucket.outputs.bucket_arn
+  ansible_bucket_name   = data.terraform_remote_state.ansible_bucket.outputs.bucket_name
+  ansible_bucket_arn    = data.terraform_remote_state.ansible_bucket.outputs.bucket_arn
+  ansible_bucket_region = data.terraform_remote_state.ansible_bucket.outputs.bucket_region
 }
 
 data "terraform_remote_state" "ssh_key" {

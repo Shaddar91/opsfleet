@@ -1,6 +1,7 @@
 #Ships the bastion's Ansible roles (as a tarball) and playbook to the Ansible bucket; files/setup_script.sh pulls both at boot.
 
 resource "aws_s3_object" "bastion_roles" {
+  region      = local.ansible_bucket_region
   bucket      = local.ansible_bucket_name
   key         = "ansible/${var.environment}-${var.application}-roles.tar.gz"
   source      = data.archive_file.bastion_roles.output_path
@@ -8,6 +9,7 @@ resource "aws_s3_object" "bastion_roles" {
 }
 
 resource "aws_s3_object" "bastion_playbook" {
+  region      = local.ansible_bucket_region
   bucket      = local.ansible_bucket_name
   key         = "ansible-playbooks/${var.environment}-bastion.yml"
   source      = local.bastion_playbook

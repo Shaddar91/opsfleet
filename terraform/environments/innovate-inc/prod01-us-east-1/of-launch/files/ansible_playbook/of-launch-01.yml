@@ -1,0 +1,119 @@
+---
+#of-launch host playbook, rendered by Terraform and run locally at boot.
+- hosts: 127.0.0.1
+  vars:
+    node_name: "${NODE_NAME}"
+    system_user: "ubuntu"
+    service_name: "of-launch"
+    aws_region: "${AWS_REGION}"
+    secrets_manager_name: "${SECRETS_MANAGER_NAME}"
+    seed_sm_name: "${SEED_SM_NAME}"
+    public_domain: "${PUBLIC_DOMAIN}"
+    backup_bucket: "${BACKUP_BUCKET}"
+    sshd:
+      port: 22
+      PermitRootLogin: "no"
+      ClientAliveInterval: 300
+      ClientAliveCountMax: 3
+      PasswordAuthentication: "no"
+      ListenAddress:
+        ipv4: "0.0.0.0"
+
+  gather_facts: true
+
+  tasks:
+    - name: Common role
+      include_role:
+        name: common
+
+    - name: Docker installation
+      include_role:
+        name: docker
+
+    - name: CodeDeploy agent
+      include_role:
+        name: aws_codedeploy_ub24
+
+    - name: Nginx installation
+      include_role:
+        name: nginx-v2
+      vars:
+        domain: "{{ public_domain }}"
+        port: 5000
+        use_https: false
+
+    - name: Nginx site for of-launch on 8080, behind the edge ALB
+      copy:
+        dest: "/etc/nginx/sites-enabled/{{ public_domain }}.conf"
+        content: |
+          server {
+            listen 8080 default_server;
+            server_name {{ public_domain }} _;
+
+            location / {
+                proxy_pass http://127.0.0.1:5000/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_read_timeout 600;
+                proxy_connect_timeout 300;
+                proxy_send_timeout 300;
+            }
+          }
+
+    - name: Allow port 8080 on ufw
+      community.general.ufw:
+        rule: allow
+        port: "8080"
+        proto: tcp
+
+    - name: Restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: true
+
+    - name: Mount MySQL data EBS volume
+      include_role:
+        name: ebs-mount
+      vars:
+        ebs_device: /dev/nvme1n1
+        ebs_mount_path: /data/mysql
+        ebs_owner: "1000"
+        ebs_group: "1000"
+
+    - name: of-launch service setup
+      include_role:
+        name: of-launch-service
+      vars:
+        app_dir: /opt/of-launch
+        sm_name: "{{ secrets_manager_name }}"
+        ecr_region: "{{ aws_region }}"
+
+    - name: MySQL backup cron
+      include_role:
+        name: mysql-backup
+      vars:
+        app_dir: /opt/of-launch
+        backup_dir: /opt/of-launch/backups
+        backup_retention_days: 7
+
+    - name: Node Exporter
+      include_role:
+        name: node-exporter
+
+    - name: Create swap
+      include_role:
+        name: swap
+      vars:
+        swap_size: 4
+        swappiness_value: 20
+
+    - name: Storage Saver
+      include_role:
+        name: storage_saver
+      vars:
+        file_path: "/storage-saver.img"
+        file_size_gb: 5
+        space_required_gb: 10

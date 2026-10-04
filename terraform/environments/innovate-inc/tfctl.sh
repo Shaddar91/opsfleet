@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #tfctl.sh: one innovate-inc region at a time; prod01-us-east-1/tfctl.sh and prod01-us-west-2/tfctl.sh start it for their folder.
-#apply walks the shared stacks every region needs, then the region's tiers (<region>/rollout, each tier's stacks file); destroy walks back.
+#apply walks the shared stacks the region owns (<region>/shared), then its tiers (<region>/rollout, each tier's stacks file); destroy walks back.
 set -euo pipefail
 ((BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] >= 404)) || { echo "tfctl: needs bash 4.4 or newer" >&2; exit 1; }
 
@@ -9,8 +9,8 @@ CONF="${OPSFLEET_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/opsfleet/${OPSFLEET
 if [ -z "${STATE_BUCKET:-}" ] && [ -f "$CONF" ]; then . "$CONF"; fi
 : "${STATE_BUCKET:?set it in the environment or in $CONF}" "${STATE_BUCKET_REGION:?set it in the environment or in $CONF}" "${STATE_KEY_PREFIX:?set it in the environment or in $CONF}"
 export STATE_BUCKET STATE_BUCKET_REGION STATE_KEY_PREFIX
-#shared stacks, relative to a region folder, in apply order: the hosted zones, then the accelerator that publishes into them
-SHARED=(../../../system/r53/opsfleet ../global/global-accelerator)
+#shared stacks the region owns, from <region>/shared in apply order; a region without that file never plans, applies or destroys them
+SHARED=()
 #global stacks that also hold a shared stack's outputs; sibling regions are added at run time
 declare -A EXTRA_USERS=([../../../system/r53/opsfleet]=../global/frontend)
 REGION='' REGION_DIR='' ENTRY='' HOLDER=''
@@ -29,9 +29,10 @@ Run it from a region folder (prod01-us-east-1/tfctl.sh, prod01-us-west-2/tfctl.s
 region first: ./tfctl.sh prod01-us-east-1 apply. A stack is its path under the region: network, cluster/eks,
 cluster/eks/components/karpenter, app-services/of-load.
 
-apply walks the region's tiers in <region>/rollout order, each tier in its stacks file order, after the two stacks every region
-needs: the hosted zones (../../../system/r53/opsfleet) and the accelerator (../global/global-accelerator). A shared stack is
-applied only when its plan shows changes, so the second region finds it and moves on. destroy walks the same list backwards and
+apply walks the region's tiers in <region>/rollout order, each tier in its stacks file order, after the shared stacks in
+<region>/shared: the hosted zones (../../../system/r53/opsfleet) and the accelerator (../global/global-accelerator), listed only by
+prod01-us-east-1. A region without that file never plans, applies or destroys them and only reads their state, so apply
+prod01-us-east-1 first. A shared stack is applied only when its plan shows changes. destroy walks the same list backwards and
 keeps a shared stack while another region, or global/frontend for the zones, still holds resources. Any destroy is refused while
 a later stack still holds resources. The buckets, keys, ECR and GitHub stacks belong to terraform/tfctl.sh; ci/ and
 global/frontend are not walked: run them by hand (cd <stack> && ../init.sh && terraform apply).
@@ -42,7 +43,7 @@ apply
   resume           ./tfctl.sh apply all --from cluster/eks/components/karpenter
 plan               ./tfctl.sh plan [<stack>|all]          changes nothing
 destroy
-  everything       ./tfctl.sh destroy                     app-services, components, eks, internal-alb, edge, network, then the shared stacks
+  everything       ./tfctl.sh destroy                     app-services, components, eks, internal-alb, edge, network, then the region's shared stacks
   one stack        ./tfctl.sh destroy cluster/eks
 order              ./tfctl.sh order                       the list, first to last
 USAGE
@@ -278,6 +279,7 @@ main() {
   ENTRY=${TFCTL_ENTRY:-$0 $REGION}
   shift
   [[ $REGION != */* && -f $REGION_DIR/rollout ]] || die "no region '$REGION' (expected $REGION/rollout under ${ROOT##*/}/)"
+  if [[ -f $REGION_DIR/shared ]]; then mapfile -t SHARED < <(read_list "$REGION_DIR/shared"); fi
   for s in "${SHARED[@]}"; do
     [[ -d $REGION_DIR/$s && -f $REGION_DIR/$s/../init.sh ]] || die "shared stack $s is missing or has no init.sh beside it"
     IS_SHARED[$s]=1

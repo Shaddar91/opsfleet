@@ -1,0 +1,38 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+            "Action": [
+                "codedeploy:CreateDeployment",
+                "codedeploy:GetApplicationRevision",
+                "codedeploy:GetDeployment",
+                "codedeploy:GetDeploymentConfig",
+                "codedeploy:RegisterApplicationRevision",
+                "lambda:InvokeFunction",
+                "lambda:ListFunctions",
+                "sns:Publish"
+            ],
+            "Resource": "arn:aws:codedeploy:${REGION}:${ACCOUNT_ID}:deploymentgroup:${ENV}-${APP_NAME}/${APP_NAME}*",
+            "Effect": "Allow"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketAcl",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": "arn:aws:s3:::${bucket}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:${REGION}:${ACCOUNT_ID}:/${ARTIFACT_BUCKET}/${ENV}/${APP_NAME}/*"
+            ]
+        }
+    ]
+}

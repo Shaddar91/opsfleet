@@ -1,0 +1,42 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "ArtifactPolicy",
+        "Effect": "Allow",
+        "Action": [
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:PutObject"
+        ],
+        "Resource": "arn:aws:s3:${REGION}:${ACCOUNT_ID}:/${ARTIFACT_BUCKET}/${ENV}/${APP_NAME}"
+    }]
+}
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+            "Action": [
+                "codedeploy:GetDeploymentGroup",
+                "codedeploy:GetDeployment",
+                "codedeploy:CreateDeployment"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:codedeploy:${region}:${account}:deploymentgroup:${environment}-${application}/${name}*"
+        },
+        {
+            "Action": [
+                "codedeploy:GetDeploymentConfig"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:codedeploy:${region}:${account}:deploymentconfig:*"
+        },
+        {
+            "Action": [
+                "codedeploy:GetApplicationRevision"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:codedeploy:${region}:${account}:application:${environment}-${application}"
+        }
+    ]
+}

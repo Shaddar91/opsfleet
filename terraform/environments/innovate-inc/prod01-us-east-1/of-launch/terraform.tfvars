@@ -1,0 +1,12 @@
+mails             = []
+ami               = "ami-0bec8cef5313300ad"
+application       = "of-launch"
+instance_type     = "t4g.micro"
+disk_size         = "30"
+mysql_volume_size = 5
+ansible_playbook  = "of-launch-01.yml"
+internal_domain   = "of-launch"
+public_subdomain  = "launch"
+alb_priority      = 60
+gh_repo           = "of-launch"
+gh_branch         = "master"
