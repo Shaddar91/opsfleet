@@ -13,3 +13,4 @@ waf_rate_window_sec           = 300
 waf_log_retention_days        = 60
 web_repository                = "of-web"
 artifact_prefix               = "production/of-web"
+create_waf                    = false

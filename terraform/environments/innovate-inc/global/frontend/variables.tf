@@ -115,3 +115,8 @@ variable "artifact_prefix" {
   description = "Key prefix of the of-web builds in the artifact bucket, no trailing slash"
   type        = string
 }
+
+variable "create_waf" {
+  description = "Put the WAF web ACL in front of the distribution; false removes the web ACL, its logging and its log group"
+  type        = bool
+}
