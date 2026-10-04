@@ -5,11 +5,11 @@ Innovate Inc. runs a React single-page app, a Flask REST API and a PostgreSQL da
 
 ## Where we are and where we want to be
 
-Today the Terraform in terraform/ builds the system in one AWS account and two regions: production in us-east-1 and a copy of it in us-west-2, with Global Accelerator in front to send each user to the nearest healthy region. The database runs in us-east-1. The code can turn it into an Aurora global database with a read-only copy in us-west-2, and a Lambda function in us-west-2, started by hand, takes us-east-1 out of traffic and promotes that copy. That is disaster recovery (DR) at the level of regions: when one region fails, the other carries on.
+Today the Terraform in terraform/ builds the system in one Amazon Web Services (AWS) account and two regions, us-east-1 and us-west-2. Global Accelerator sits in front and sends each user to the nearer healthy region. The database runs in us-east-1. The code can add a read-only copy of it in us-west-2, as an Aurora global database; that copy is switched off today. A Lambda function in us-west-2, started by hand, takes us-east-1 out of traffic and promotes the copy. That is disaster recovery (DR) at the level of regions: when one region fails, the other carries on.
 
-The target takes the same idea one level up, to accounts. A second region protects us from a region going down. Separate accounts protect us from what goes wrong inside one account: a leaked pipeline key, a deleted database, a load test that uses up a quota, a person with more access than the job needs. Each of those stays inside the account where it happened. So the one account becomes an AWS Organization of eight accounts in organizational units (OUs), shown in the next section, and both regions stay together inside the Prod account. The Backup account does the same for the data: its copies survive even someone taking over Prod, which neither the second region nor a standby database in another zone can do.
+The target takes the same idea one level up, to accounts. A second region protects us from a region going down. Separate accounts protect us from what goes wrong inside one account: a leaked pipeline key, a deleted database, a load test that uses up a quota, a person with more access than the job needs. Each of those stays inside the account where it happened. So the one account becomes an AWS Organization of eight accounts in organizational units (OUs), shown in the next section. Both regions stay together inside the Prod account. The Backup account does for the data what the second region does for traffic: its copies survive even someone taking over Prod.
 
-Built marks what the Terraform in this repository creates today. Not built yet marks what is proposed.
+Built marks what the Terraform in this repository builds today. Not built yet marks what is proposed.
 
 ## Cloud environment structure
 Innovate Inc. needs an AWS Organization with organizational units (OUs). The brief asks for a secure, scalable and cost-effective setup that can grow to millions of users, so we split the system into separate AWS accounts and group them in OUs. If a compliance requirement shows up later (SOC 2, HIPAA, PCI), the structure already fits and needs little or no change.
@@ -68,99 +68,107 @@ Billing and management. Consolidated billing sits in Management, so every accoun
 
 ### VPC architecture
 
-Every workload account has its own virtual private cloud (VPC) in each region it runs in, spread over three Availability Zones (AZs), and every VPC has the same four subnet tiers, set apart by what may reach the internet: public, private, internal and Lambda. Today there is one VPC per region, both 10.144.0.0/16, with public, private and internal tiers and a small bastion tier (Built). The Lambda tier, a VPC per account and a range of its own for every VPC are Not built yet.
+Every workload account has one virtual private cloud (VPC), its private network, per region, with four subnet tiers set apart by what may reach the internet: public, private, internal and Lambda. Each VPC spans three Availability Zones (AZs), separate data centers of one region. Today there is one VPC per region, with the public, private and internal tiers and a small one for the bastion host (Built). The Lambda tier and a VPC per account are Not built yet.
 
-Public subnets are the only place where anything may have a public Internet Protocol (IP) address. They hold only what has to face the internet: the public load balancers, and the network address translation (NAT) gateways that let the private subnets reach out. Their route table sends internet traffic to the internet gateway, the VPC's door to the internet.
+Public subnets are the only ones where anything may have a public Internet Protocol (IP) address. They hold only what faces the internet: the public load balancers and the network address translation (NAT) gateways. Their route table leads to the internet gateway, the VPC's door to the internet.
 
-Private subnets hold the EKS nodes and pods, the internal load balancer and RDS Proxy, the connection pool in front of the database. Nothing here may have a public IP address. Traffic goes out through the NAT gateway in the same zone, and nothing on the internet can open a connection in.
+Private subnets hold the nodes and pods of the Amazon Elastic Kubernetes Service (EKS) cluster, the internal load balancer, and RDS Proxy, the connection pool in front of the database. Nothing here may have a public IP address. They go out through the NAT gateways, and nothing on the internet can open a connection in.
 
-Internal subnets hold the databases and nothing else. Their route table has only the VPC's own local route: no internet gateway, no NAT gateway. That is why we want them. If a security group is opened by mistake, the database still cannot be reached from the internet, and the database itself cannot send data out, because no route leads outside the VPC. A database feature that calls an AWS service, an export to S3 for example, goes through a VPC endpoint, a private path to that service (Built for S3).
+Internal subnets hold the databases and nothing else. Their route table has no way out: no internet gateway, no NAT gateway, only a VPC endpoint, a private path to Amazon Simple Storage Service (S3). That is why we want them. A database made public by mistake still cannot be reached from the internet. Nothing in these subnets can send data to the internet either, because no route leads there.
 
-Lambda subnets are a small tier for functions that must sit inside the VPC, for example one that rotates the database password and so has to reach the database. Lambda creates one network interface per subnet and security group pair and shares it between functions, so a small range is enough. A tier of their own keeps functions off the addresses the pods need, and the internal subnets can admit them by address range. A function that needs the internet routes through the NAT gateway; one that only talks to the database uses the internal route table. The network module already supports both.
+Lambda subnets are a small tier for functions that must run inside the VPC, such as one that rotates a database password. Lambda shares one network interface between functions with the same subnet and security group, so a small range is enough. A tier of their own keeps functions off the pods' addresses and lets the database admit them by range. Each Lambda subnet takes either the NAT route or the internal route table. The network module supports both, and no stack uses it yet.
 
-Subnet sizes follow the EKS cluster. The VPC CNI, the Container Network Interface plugin that connects pods to the VPC, gives every pod its own address from the private subnet, so pods use up addresses far faster than anything else. Each VPC is a /16, 65,536 addresses, and three quarters of it goes to the private tier: one /18 per zone, about 16,000 addresses each (Built). Public and internal subnets get a /22 per zone (Built), the Lambda tier a /26 per zone, and the rest stays free. If the pods ever outgrow the private tier, the VPC takes a second range from 100.64.0.0/10 for pods only, through the VPC CNI's custom networking, and the existing subnets stay as they are.
+Subnet sizes follow the EKS cluster. Through the VPC Container Network Interface (CNI) plugin, every pod takes its own address from the private subnet, so pods use up addresses faster than anything else. Three quarters of each /16 VPC goes to the private tier: one /18 per zone, about 16,000 addresses each (Built). The public and internal tiers get a /22 per zone (Built), the Lambda tier a /26, and the rest stays free. If the pods ever outgrow the private tier, the VPC adds a second range for pods only, from 100.64.0.0/10 (reserved).
 
-Every VPC takes its range from Amazon VPC IP Address Manager (IPAM), one pool for the whole organization, so no two VPCs overlap. Today both regions use 10.144.0.0/16. Two VPCs with the same range can never be peered, and a Transit Gateway cannot route between them, so the regions have no private path to each other. With IPAM ranges, either connection can be added the day it is needed.
+Every VPC takes its range from one organization pool in Amazon VPC IP Address Manager (IPAM), so no two VPCs overlap (Not built yet). Today both regions use 10.144.0.0/16, and two VPCs with the same range can never be joined by peering or a Transit Gateway. With IPAM ranges, either link can be added the day it is needed.
 
-Each zone gets its own NAT gateway (Not built yet). Today one NAT gateway in the first zone serves all three private subnets, so losing that zone cuts every node off the internet and off ECR. The network module already has the switch.
+Each zone gets its own NAT gateway (Not built yet). Today one NAT gateway serves all three zones, so losing its zone cuts every node off the internet and the image registry. The module has the switch.
 
-AWS services are reached through VPC endpoints, so that traffic stays on the AWS network and skips the NAT gateway: S3 through a gateway endpoint (Built); ECR, the Security Token Service (STS), Secrets Manager, CloudWatch Logs and Systems Manager through interface endpoints (Not built yet). Each endpoint's policy admits only our organization.
+AWS services are reached through VPC endpoints, so that traffic stays on the AWS network and skips the NAT gateway. S3 has one (Built). Amazon Elastic Container Registry (ECR), AWS Security Token Service (STS), Secrets Manager, CloudWatch Logs and Systems Manager get theirs (Not built yet). Each endpoint admits only our organization.
 
-How a request reaches a service. The web app and the API take two paths, both Built.
+How a request reaches a service. The React web app and the Flask application programming interface (API) take two paths (Built).
 
-The web app: web.prod.innovate.example points at CloudFront. CloudFront checks the request with AWS WAF and serves the React files from an Amazon Simple Storage Service (S3) bucket. In the target only CloudFront can read that bucket, through origin access control (OAC); today CloudFront reads it through the bucket's website endpoint, guarded by a secret request header. Nothing in the VPC is involved.
+The web app: web.prod.innovate.example points at CloudFront, the AWS content delivery network. CloudFront checks the request with AWS WAF, the web application firewall, and serves the React files from an S3 bucket. Lambda@Edge, code CloudFront runs at its edge locations, adds security headers to every answer. Today the bucket is a public website that answers only requests carrying a secret, which Lambda@Edge adds. In the target only CloudFront can read it, through origin access control (OAC) (Not built yet).
 
-The API: api.prod.innovate.example points at the two static IP addresses of Global Accelerator. The accelerator takes the user onto the AWS network at the nearest edge location and hands the connection to the public Application Load Balancer (ALB) in the nearest healthy region, keeping the user's IP address. The ALB checks the request with AWS WAF, ends Transport Layer Security (TLS), the encryption behind HTTPS, and picks the service by host name: api. goes to the API, load. to the load-test service, a name without a rule gets 403. Each service's target group holds the pods' own IP addresses, kept current by the AWS Load Balancer Controller, so the request goes from the ALB straight to a pod. The pod reaches the database through RDS Proxy, which talks to Aurora on port 5432.
+The API: api.prod.innovate.example points at the two static IP addresses of Global Accelerator. The accelerator takes the user onto the AWS network at the nearest edge location. It hands the connection, with the user's IP address, to the public Application Load Balancer (ALB) in us-east-1, or in us-west-2 when us-east-1 is down. Today both regions take traffic and each user goes to the nearer one; the Database section explains why the target keeps us-west-2 waiting. The ALB checks the request with AWS WAF and ends Transport Layer Security (TLS), the encryption behind https addresses. It picks the service by host name: api. goes to the API, load. to the load-test service, and a name without a rule gets 403. The target groups hold the pods' own IP addresses, kept current by the AWS Load Balancer Controller, so the request goes from the ALB straight to a pod. The pod reaches the database through RDS Proxy.
 
-Services that only other services call go behind the internal load balancer in the private subnets (Built) and are never published. Calls out to a third party leave through the NAT gateway of the pod's zone, whose fixed address is the one the third party can allowlist.
+Services that only other services call go behind the internal load balancer and are never published. It is built, and nothing uses it yet. Calls out to a third party leave through the NAT gateway, whose fixed address the third party can allowlist.
 
 ### Securing the network
 
-We secure the network in layers: only the edge faces the internet and every request is checked there; inside, each tier accepts traffic only from the tier in front of it; and organization rules keep it that way in every account. Two situations matter: someone on the internet attacking the application, and someone who already got in, through a bug in the API for example, trying to go further or send data out.
+We secure the network in layers. Only the edge faces the internet, and it checks every request. Inside, each tier accepts traffic only from the tier in front of it. Organization rules keep it that way in every account. Two situations matter: someone on the internet attacking the application, and someone already inside, through a bug in the API for example, trying to go further or send data out.
 
-The edge. CloudFront and Global Accelerator are the only ways in. Both include AWS Shield Standard, which absorbs common network floods at no extra cost. AWS WAF, the Web Application Firewall, runs on CloudFront and on each public ALB and checks every request against our rules. Built today: AWS managed rules against known bad IP addresses, common web attacks and known bad inputs, plus SQL injection on the ALB; a blocklist of IP addresses on the ALB that we fill by hand; and a limit of 2,000 requests per IP address in five minutes. Not built yet: an allowlist for addresses we trust, a partner or the office, that skips the rate limit (the module has it, switched off); much lower limits on sign-in and sign-up than on reading data; the Anonymous IP list, which marks requests from Tor, VPN services and hosting providers, where most attack tools run, blocked on sign-in and counted elsewhere; Bot Control, which recognises scanners and scripts that say what they are; account takeover prevention on sign-in, which flags attempts with stolen passwords. All WAF logs go to Log Archive.
+The edge. CloudFront and Global Accelerator are the only ways in, and both come with AWS Shield Standard against common network floods. AWS WAF on CloudFront and on each public ALB checks every request. Today the ALB also answers on its own AWS address, past the accelerator but not past WAF. In the target it admits only the accelerator (Not built yet).
 
-Forged requests. A tool like Burp Suite sits between the browser and our API: someone uses the app normally, catches a real request, changes it, say another user's ID or a field the form never sends, and sends it again, once or thousands of times. AWS WAF makes that expensive. The React app gets a token through the AWS WAF JavaScript integration and sends it with every API call. Bot Control's targeted rules then challenge an address that keeps sending requests without a valid token and block a token that shows up from more than eight IP addresses within five minutes (Not built yet). That stops scripted replay. It cannot stop one careful person editing one request inside their own signed-in session, because that request looks exactly like a real one. Only the API stops that: on every request it checks who the user is and whether they may touch that record, and it checks every input against what the endpoint expects.
+Built today, in WAF: AWS managed rules stop known bad IP addresses, common web attacks and known bad inputs. Each IP address may send 2,000 requests in five minutes, then it is blocked. Trusted addresses, a partner or the office, skip that limit through a list that is empty today. The ALB also stops SQL injection, database commands in Structured Query Language (SQL) smuggled into a request. It keeps a blocklist of IP addresses in Terraform.
 
-Inside the VPC. Security groups, the firewall on each network interface, chain the tiers. The public ALB takes web traffic from the internet, and Aurora takes 5432 only from RDS Proxy (Built). RDS Proxy takes 5432 from the whole VPC today; in the target only from the API pods, which get a security group of their own through EKS security groups for pods (Not built yet). Kubernetes network policies, which the VPC CNI enforces, block pod-to-pod traffic a service does not need, so a broken pod cannot reach every other service (Not built yet). A network access control list (ACL) on the internal subnets admits the database port only from the private and Lambda ranges, a second lock that does not depend on security groups (Not built yet).
+Not built yet, in WAF: sign-in and sign-up get much lower limits than reading data. The Anonymous IP list marks requests from Tor, virtual private network (VPN) services and hosting providers; we block them on sign-in and count them elsewhere. Bot Control stops scanners and scripts. Account takeover prevention stops sign-ins with stolen passwords. All WAF logs go to Log Archive.
 
-Outbound. Private subnets reach the internet only through the NAT gateways. Route 53 Resolver DNS Firewall blocks Domain Name System (DNS) lookups of known malware and command-and-control domains in every VPC, so a compromised pod cannot easily call home (Not built yet). If a compliance rule asks for inspection of outbound traffic, AWS Network Firewall goes in front of the NAT gateways with a list of allowed domains.
+Forged requests. Burp Suite and tools like it sit between the browser and our API. Someone catches a real request, changes it, say another user's number or a field the form never sends, and replays it, once or thousands of times. AWS WAF makes the scripted part expensive (Not built yet). The React app gets a token through the AWS WAF JavaScript integration and sends it with every call. Bot Control then challenges an address that keeps calling without a valid token, and blocks a token used from many addresses at once. One careful person editing one request in their own session still looks like a real user. Only the API stops that: on every request it checks who the user is, whether they may touch that record, and whether each input is what the endpoint expects.
 
-Rules above the accounts. The declarative policy that turns on IMDSv2 also turns on VPC Block Public Access in ingress-only mode in every account: internet traffic can enter only subnets the account excludes, and Terraform excludes only the public subnets. A public IP address put on anything else gets no traffic from the internet, whatever its route table says. NAT gateways keep working, because they only open connections outward (Not built yet).
+Inside the VPC. Security groups, the firewall on each network interface, chain the tiers: the ALB takes web traffic, and Aurora takes port 5432 only from RDS Proxy (Built). Today RDS Proxy takes 5432 from the whole VPC, and the system nodes take every port from it. In the target the proxy admits only the API pods, through EKS security groups for pods, and the nodes only what the cluster needs (Not built yet). Kubernetes network policies, enforced by the VPC CNI, block pod-to-pod traffic a service does not need (Not built yet). A network access control list (ACL) on the internal subnets admits the database port only from the private and Lambda ranges. It is a second lock that does not depend on security groups (Not built yet).
 
-Admin access. Today the cluster's public API endpoint admits one address, the machine that ran Terraform; the bastion has a public IP address in a subnet of its own; and the Argo CD web interface sits on an internet-facing load balancer with its built-in admin login. In the target the cluster API endpoint is private only, the bastion moves into the private subnets without a public address, and people reach both through Session Manager, part of AWS Systems Manager (SSM), over VPC endpoints. Argo CD moves to the internal load balancer behind the company sign-in. The pipeline that applies the cluster components then runs on a GitHub Actions runner inside the VPC; if that runner is down, cluster changes wait and running workloads carry on (Not built yet).
+Outbound. Private subnets reach the internet only through the NAT gateways. Route 53 Resolver DNS Firewall blocks Domain Name System (DNS) lookups of known malware and command-and-control domains, so a compromised pod cannot easily call home (Not built yet). If a compliance rule asks to inspect outbound traffic, AWS Network Firewall goes in front of the NAT gateways with a list of allowed domains (optional).
 
-Encryption and logs. TLS ends at CloudFront and at the ALBs; behind them traffic is plain HTTP today. Because the data is sensitive, the ALB encrypts again to the pods with HTTPS target groups (Not built yet). VPC Flow Logs record rejected connections and stay 60 days in the account today; in the target all flow logs, WAF logs and load balancer logs go to Log Archive.
+Internal names. The database and RDS Proxy names sit in a public DNS zone today, so anyone can look them up. In the target they move to a private zone only the VPC can read; the zone module already has the option (Not built yet).
+
+Rules above the accounts. The declarative policy that turns on IMDSv2, version 2 of the Instance Metadata Service, also turns on VPC Block Public Access in ingress-only mode (Not built yet). Internet traffic then enters only the subnets Terraform excludes, the public ones. A public IP address on anything else gets no traffic from the internet, whatever its route table says, and NAT gateways keep working.
+
+Admin access. Today the cluster API endpoint is public as well as private, open to one address: the machine that ran Terraform. The bastion has a public IP address, though no inbound rule. Argo CD sits on its own internet-facing load balancer, without WAF, behind its built-in admin login. In the target the cluster API is private, the bastion has no public address, and people reach both through Session Manager, part of AWS Systems Manager (SSM). Argo CD moves behind the internal load balancer and the company sign-in. The pipeline that applies the cluster components then runs on a GitHub Actions runner inside the VPC. If that runner is down, cluster changes wait and running workloads carry on (Not built yet).
+
+Encryption and logs. TLS ends at CloudFront and the ALBs, and behind them traffic is unencrypted today. Because the data is sensitive, the ALB encrypts again to the pods (Not built yet). VPC Flow Logs keep rejected connections for 60 days in the account today. In the target all flow, WAF and load balancer logs go to Log Archive (Not built yet).
 
 ## Compute platform
 
 ### Kubernetes: deploying and managing the application
 
-The application runs on Amazon Elastic Kubernetes Service (EKS), one cluster in each workload account and region, and Argo CD inside each cluster deploys it from Git. Today there is one cluster per region with Karpenter, the AWS Load Balancer Controller, external-dns, the EBS CSI driver that gives pods disks, metrics-server and Argo CD, each installed by its own Terraform stack (Built). In the target the same Terraform runs once per account with that account's values: one cluster in Dev, one in Staging, one per region in Prod (Not built yet).
+The application runs on EKS, one cluster per workload account and region, and Argo CD inside each cluster deploys it from Git. Argo CD is a GitOps controller: it reads the wanted state from a Git repository and makes the cluster match it. Today there is one cluster per region (Built). Terraform installs each cluster component in its own stack: Karpenter for nodes, the AWS Load Balancer Controller, external-dns for DNS records, metrics-server for scaling, a storage driver and Argo CD (Built). In the target the same Terraform runs in each account with that account's values: one cluster in Dev, one in Staging, one per region in Prod (Not built yet).
 
-Upgrades. A Kubernetes upgrade goes to Dev first, then Staging, then Prod, one minor version at a time, and the EKS managed add-ons move with it. Karpenter notices a new node image and replaces the nodes by itself, within its disruption budget (Built). Every cluster takes the newest Amazon Machine Image (AMI) today; in the target Prod pins the version that passed Staging (Not built yet).
+Upgrades. A Kubernetes upgrade goes to Dev, then Staging, then Prod, one minor version at a time, together with the EKS managed add-ons and the managed node group. Karpenter replaces its nodes by itself when a new node image comes out, a tenth of them at a time (Built). Today it takes the newest Amazon Machine Image (AMI), the node's disk image, the day it appears. In the target Prod pins the image that passed Staging (Not built yet).
 
-Access. People reach a cluster with their IAM Identity Center sign-in, and an EKS access entry maps their permission set to Kubernetes rights: write in Dev, read-only in Staging and Prod (Not built yet). Nobody deploys to Staging or Prod with kubectl. Controllers get AWS rights through EKS Pod Identity, one role each (Built), and services read their secrets from Secrets Manager through the Secrets Store CSI driver.
+Access. People reach a cluster with their IAM Identity Center sign-in. An EKS access entry turns their permission set into Kubernetes rights: write in Dev, read-only in Staging and Prod (Not built yet). Nobody deploys to Staging or Prod with kubectl. The controllers and each service get AWS rights through EKS Pod Identity, one role each (Built). Each service reads only its own secrets from Secrets Manager, mounted as files by the Secrets Store CSI driver, a Container Storage Interface (CSI) plugin (Built).
 
 ### Node groups, scaling and resource allocation
 
-A small EKS managed node group runs the cluster's own controllers, and Karpenter launches every node the applications run on, x86 or Graviton, on Spot first and On-Demand when Spot is short. Today the controllers run on two managed node groups, one Graviton and one x86, both on Spot. Karpenter has two NodePools, the sets of instance types it may launch: x86, the default, and Graviton, which pods opt into through a taint, a mark that keeps other pods off those nodes. Both use recent compute, general-purpose and memory-optimized instance types (Built).
+A small managed node group runs the cluster's own controllers, and Karpenter launches every node the applications use. Pods scale with the load, nodes follow the pods, and every container states the processor (CPU) and memory it needs.
+
+Node groups. Today the controllers run on two EKS managed node groups of one node each, one Graviton and one x86, both on Spot (Built). Graviton is AWS's own Arm processor. Spot is spare capacity at a discount that AWS takes back with two minutes' warning; On-Demand is full price and stays. Karpenter has two NodePools, the sets of instance types it may launch, sixth generation or newer, Spot first (Built). x86 is the default. Graviton has a taint, a mark that keeps off every pod that does not tolerate it, and today runs only of-load, the load-test service.
 
 What changes (Not built yet):
 
-The controllers' node group moves to On-Demand Graviton, at least two nodes in different zones. Karpenter runs there, and if Spot took its node back, nothing would launch new nodes until Karpenter was running again.
+The controllers' node group moves to On-Demand Graviton, two nodes or more in different zones, with a taint so only the controllers run there. Today application pods can land there too, and if Spot takes the node that runs Karpenter, no new node launches until Karpenter is back.
 
-Graviton becomes the default pool for our own services. Both images are already built for x86 and Graviton, of-load already runs on Graviton, and Graviton instances cost less per hour than comparable x86 ones. The x86 pool stays for third-party images built only for x86.
+Graviton becomes the default pool for our own services. The API and load-test images are already built for both, and Graviton costs less per hour than comparable x86. The x86 pool stays for third-party images built only for x86.
 
-In Prod every service keeps part of its replicas on On-Demand. Pods spread across Spot and On-Demand the way they already spread across zones, so a wave of Spot reclaims never takes all replicas at once. Savings Plans cover the steady On-Demand part.
+In Prod every service keeps part of its replicas on On-Demand, so a wave of Spot reclaims never takes all of them. Savings Plans cover that steady part.
 
-Scaling. Each service scales its pods with the Horizontal Pod Autoscaler (HPA) on processor (CPU) and memory use. An API that mostly waits on the database shows load late in CPU, so in Prod KEDA, Kubernetes Event-driven Autoscaling, scales it on requests per pod from the ALB; the KEDA stack and the chart setting exist and are switched off (Not built yet). Nodes follow the pods: Karpenter adds a node when pods cannot be placed and removes nodes that are empty or underused, and each pool has a CPU ceiling, so a runaway scale-out hits a wall before it hits the bill (Built). Prod's ceilings come from load tests in Staging.
+Scaling. Pods scale with the Horizontal Pod Autoscaler (HPA): the API on CPU, the load-test service on CPU and memory (Built). An API that mostly waits on the database shows load late in CPU. So in Prod, KEDA (Kubernetes Event-driven Autoscaling) scales it on requests per pod, read from the ALB. The KEDA stack and the chart setting exist and are switched off (Not built yet). Nodes follow the pods: Karpenter adds a node when pods cannot be placed, and removes empty or underused ones (Built). Each pool has a CPU ceiling, so a runaway scale-out hits a wall before it hits the bill (Built). Prod's ceilings come from load tests in Staging.
 
 Growing from a few hundred users a day to millions needs no redesign: more pods, more nodes, more database readers. What to watch on the way: the pool ceilings, Spot capacity in the region, the database writer, and free addresses in the private subnets.
 
-Resource allocation. Every container states how much CPU and memory it needs; Karpenter picks node sizes from that, and the HPA measures use against it. Each service has its own namespace, and a PodDisruptionBudget keeps all but one replica running while nodes are replaced. Not built yet: a LimitRange that gives a default to any container that forgets, a ResourceQuota per namespace so one service cannot take the whole cluster, and PriorityClasses so the API and the controllers win over batch work when capacity is short.
+Resource allocation. Every service container states the CPU and memory it needs (Built). Karpenter sizes nodes from that, and the HPA measures use against it. Each service has its own namespace, and a PodDisruptionBudget keeps all but one replica running while nodes are replaced (Built). What is left is one workload crowding out the rest, and three Kubernetes objects stop it (Not built yet). A LimitRange gives a default size to containers that set none. A ResourceQuota caps each namespace. A PriorityClass keeps the API running ahead of batch work.
 
 ### Containerization: image building, registry, deployment
 
-Every service is built once by GitHub Actions into one image for both x86 and Graviton, kept in Amazon Elastic Container Registry (ECR) under a tag that never changes, and deployed by a commit to the GitOps repository that Argo CD applies; the same image then moves from Dev to Staging to Prod.
+Every service is built once by GitHub Actions into one image for x86 and Graviton, kept in ECR under a tag that never changes. A commit to the GitOps repository deploys it, and the same image moves from Dev to Staging to Prod.
 
-CI/CD today. Terraform writes each service repository's pipeline into it (Built), so every service runs the same reviewed pipeline, and a hand edit in a repository is overwritten on the next apply. A push or pull request to master runs the tests first, the API's against a real PostgreSQL. Then each architecture is built on its own native runner, x86 and arm64, and the API image has to answer on its health endpoint. On master both images go to ECR and are joined under one multi-architecture tag. Static analysis and dependency scans (CodeQL, Snyk, zizmor) run beside the build. Pipelines get AWS access through GitHub OpenID Connect (OIDC): short-lived credentials, for master only, and no AWS key stored in GitHub. The web app's pipeline builds once, keeps the build in S3, copies it to the web bucket and clears the CloudFront cache.
+Continuous integration and delivery (CI/CD) today. Terraform writes each service repository's pipeline into it, so every service runs the same reviewed pipeline and a hand edit is overwritten on the next apply (Built). A push or pull request to master runs the tests first, the API's against a real PostgreSQL. Each architecture then builds on its own native runner, x86 and arm64, and the API image must answer on its health endpoint before it is pushed. On master both images go to ECR under one multi-architecture tag. CodeQL, Snyk and zizmor scan the code, the dependencies and the workflows beside the build. The build pipelines reach AWS through GitHub OpenID Connect (OIDC): short-lived credentials, master only, no AWS key stored in GitHub. The web app's pipeline builds once and keeps the build in S3 for seven days. On every push to master it copies the build to the web bucket and clears the CloudFront cache.
 
-Versioning today. An image tag is the git commit hash, the SHA: one tag per architecture plus a joint tag for both, and no latest. ECR refuses to overwrite a tag, so a tag always means the same image (Built). release-please, a release tool that runs in GitHub Actions, opens a release pull request with a semantic version, vX.Y.Z; after the release it adds that version as a second tag to the image already built, without building again. No release has been cut yet. The web build is stored under its commit SHA. Helm chart versions are set by hand, and Argo CD reads the charts straight from Git.
+Versioning today. An image tag is the git commit hash: one per architecture, one joint tag, no latest (Built). ECR refuses to overwrite a tag, so a tag always means the same image. release-please, a release tool in GitHub Actions, opens a release pull request with a version number, vX.Y.Z, once commits are marked as features or fixes. After the release it adds the version as a second tag to the image already built (Built). No commit is marked yet, so no release exists. Helm chart versions are set by hand, and Argo CD reads the charts straight from Git.
 
-GitOps today. Yes, it is in place: what runs in the cluster is written in Git, and Argo CD, inside each regional cluster, pulls it from the GitOps repository, of-helm. Terraform creates one Argo CD Application per service and region, pointing at the service's chart on master (Built). Argo CD applies changes on its own, removes what was deleted from Git and reverts what someone changed by hand in the cluster. Both regions read the same values file, so one commit deploys both regions at once. The missing step is between the build and Git: today a person commits each new image tag into of-helm by hand. In the target the GitOps repository has one values file per environment and region, so a commit can go to Dev without touching Prod (Not built yet).
+GitOps today. Yes, it is in place. What runs in the cluster is written in the GitOps repository of-helm, and Argo CD pulls it from there. Terraform creates one Argo CD Application per service and region, Argo CD's record of which chart goes to which cluster, and points it at the chart on master (Built). Argo CD applies changes on its own, removes what was deleted from Git and reverts hand changes in the cluster. Both regions read the same values file, so one commit deploys both. The missing step is between the build and Git: a person commits each new image tag into of-helm by hand. In the target of-helm has a values file per environment and region, so a commit can go to Dev without touching Prod (Not built yet).
 
-The deployer. Developers should not have to think about Argo CD. They deploy with our own deployer, of-launch: sign in with the company login, pick the environment, the service and a build, click deploy. The deployer commits that build's tag to the GitOps repository and asks Argo CD to sync; the commit is the audit record, and the deployer shows who deployed which build where and when. Rolling back is deploying the previous build. Argo CD's own interface stays open read-only for anyone who wants to watch a sync.
+The deployer. Developers should not have to think about Argo CD. They deploy with our own deployer, of-launch: sign in with the company login, pick the environment, the service and a build, click deploy. The deployer commits that build's tag to of-helm and asks Argo CD to sync. The commit is the audit record, and the deployer shows who deployed which build where and when. Rolling back is deploying the previous build. Argo CD's own interface stays open, read-only, for anyone who wants to watch a sync.
 
-Deploy rules (Not built yet). Dev deploys every merge to master by itself. Staging and Prod deploy through the deployer, Prod takes only a build that has run in Staging, and a deploy to Prod needs a second person's approval. That keeps the rule from the account structure: every change to production is a commit plus a pipeline run, and nobody has write access to Prod.
+Deploy rules (Not built yet). Dev deploys every merge to master by itself. Staging and Prod deploy through the deployer, Prod takes only a build that has run in Staging, and a Prod deploy needs a second person's approval. That keeps the rule from the account structure: every change to production is a commit plus a pipeline run, and nobody has write access to Prod.
 
-Today of-launch is a Flask app on one EC2 virtual machine, outside this repository's Terraform, with its own user list. It has the flow and a deploy history, but its cluster deploy does not work against today's charts: it expects another values format and Application name, knows only one Argo CD, and reports success without checking. It needs the company sign-in, one Argo CD per cluster, the result read back from Argo CD and the deploy rules above (Not built yet).
+of-launch today is a Flask app with its own user list, run with Docker Compose on one server outside this repository's Terraform. It has the flow and a deploy history, but against today's charts a deploy changes nothing. It looks for the tag in another format, asks Argo CD for an Application name that does not exist, knows only one Argo CD, and reports success without checking. It needs those fixed, the company sign-in, one Argo CD per cluster, the result read back from Argo CD, and the deploy rules above (Not built yet).
 
-Registry. Today ECR sits in the one account in us-east-1, scans each image on push, refuses tag overwrites, and copies the API and load-service images to us-west-2 so the second region can pull while us-east-1 is down (Built). In the target there is one registry in Shared Services, copied to the second region; workload accounts pull through ECR VPC endpoints, allowed by the repository policy (Not built yet).
+Registry. Today ECR sits in the one account in us-east-1. It scans each image on push, refuses tag overwrites, and copies the API and load-test images to us-west-2, so the second region can pull while us-east-1 is down (Built). In the target one registry sits in Shared Services, copied to the second region, and workload accounts pull through ECR VPC endpoints (Not built yet).
 
-Supply chain. Today the scans run beside the build and block nothing, master needs no review, and the builds switch off their software bill of materials (SBOM) and their provenance record, which says how and from what an image was built. In the target a pull request needs a review and green tests and scans before it merges; builds keep the SBOM and provenance; Amazon Inspector rescans stored images when a new vulnerability is published; and images are signed at build and checked by an admission policy before a pod may start (Not built yet).
+Supply chain. The risk is a vulnerable dependency or a tampered image reaching Prod. Today the scans block nothing and master needs no review. The builds also switch off their software bill of materials (SBOM), the list of packages in the image, and their provenance record, how and from what it was built. In the target a pull request merges only with a review and green tests and scans, and builds keep the SBOM and provenance. Amazon Inspector rescans stored images when a new vulnerability is published. Images are signed at build, and an admission policy checks the signature before a pod may start (Not built yet).
 
-Infrastructure. Infrastructure changes have their own pipeline: today an operator starts it by hand, it plans with a read-only role, and it applies after an approval (Built). In the target it plans on every pull request and applies on merge, in each account, as the account structure describes (Not built yet).
+Infrastructure. Infrastructure changes have their own pipeline, started by hand: it plans with a read-only role and applies with an admin role (Built). The approval between the two needs a GitHub environment that does not exist yet, so nothing stops the apply. The apply also plans again instead of using the reviewed plan. In the target every pull request gets a plan, a reviewer approves, and the merge applies that plan, in each account (Not built yet).
 
 ## Database
 
@@ -170,33 +178,33 @@ We use Amazon Aurora PostgreSQL as a global database: a writer and a reader in u
 
 Why Aurora:
 
-Aurora keeps six copies of the data across three AZs, so losing a zone loses no data.
+Aurora keeps six copies of the data across three zones, so losing a zone loses no data.
 
 When the writer fails, a reader in another zone takes over, usually in under a minute.
 
-A global database copies every change to the second region, typically within seconds, and promotes that copy in minutes as one managed step that keeps the database's address. RDS for PostgreSQL gets there only by promoting a cross-region replica and pointing every client at its new address.
+A global database copies every change to the second region, typically within a second. It promotes that copy in minutes, as one managed step that keeps the database's address. Amazon Relational Database Service (RDS) for PostgreSQL gets there only by promoting a replica and pointing every client at its new address.
 
 Readers share the writer's storage, so more read capacity for millions of users means adding readers, up to 15, without copying data.
 
 Running PostgreSQL ourselves on EKS would leave backups, failover, patching and encryption to us, for the most sensitive data we hold.
 
-RDS Proxy sits in front of the database (Built). It pools connections, so hundreds of API pods do not run the database out of connections, and it keeps the application's connections open while a reader is promoted.
+RDS Proxy sits in front of the database (Built). It pools connections, so hundreds of API pods do not run the database out of them. It also keeps the application's connections open while a reader is promoted.
 
-Capacity. Today the cluster is one db.t4g.medium instance (Built), a class that cannot join a global database. The target starts on Aurora Serverless v2, which grows and shrinks in small steps with the load and bills what it uses, so a quiet start costs little. When the load is high and steady, the writer moves to a provisioned instance with a reservation, which costs less at constant use; the readers can stay on Serverless v2, because one cluster can mix both (Not built yet).
+Capacity. Today the cluster is one db.t4g.medium instance (Built), a class that cannot join a global database. The target starts on Aurora Serverless v2, which grows and shrinks with the load and bills what it uses, so a quiet start costs little. When the load is high and steady, the writer moves to a reserved provisioned instance, cheaper at constant use, and the readers can stay on Serverless v2 (Not built yet).
 
-Encryption and credentials. The data is encrypted with a customer managed key (CMK) of the Prod account (Not built yet). Today it uses the AWS managed key, which also blocks copying snapshots to another account. The password sits in Secrets Manager and reaches the pods through the Secrets Store CSI driver (Built); IAM authentication between the pods and RDS Proxy takes the shared password out of the application (Not built yet).
+Encryption and credentials. The data is encrypted with a customer managed key (CMK) of the Prod account (Not built yet). Today's AWS managed key also blocks the copy to the Backup account's vault. The password sits in Secrets Manager and reaches the pods through the Secrets Store CSI driver (Built). Today it also sits in the Terraform state; in the target Terraform writes it without keeping it (Not built yet). AWS Identity and Access Management (IAM) authentication between the pods and RDS Proxy then takes the shared password out of the application (Not built yet).
 
 ### Backups, high availability, disaster recovery
 
 Aurora backs up continuously, a reader in a second zone covers a failed writer, the copy in us-west-2 covers a lost region, and the Backup account covers a lost or compromised Prod account.
 
-Backups. Aurora's continuous backup restores the database to any point within the retention window; Prod keeps 35 days, the most Aurora allows (Not built yet; today 1 day). An organization backup policy takes a daily snapshot with AWS Backup and copies it to a logically air-gapped vault in the Backup account in us-west-2. That vault is always locked: nobody, an administrator of the Backup account included, can delete a copy before it expires. AWS Backup restore testing restores a recent copy on a schedule and checks it, so we know a backup works before we need it. Deletion protection is on, and a final snapshot is taken before any delete (Not built yet; today both are off).
+Backups. Aurora's continuous backup restores the database to any point in the retention window: 35 days in Prod, the most Aurora allows (Not built yet; today 1 day). An organization backup policy takes a daily snapshot with AWS Backup and copies it to a logically air-gapped vault in the Backup account, in us-west-2. That vault is always locked: nobody, an administrator of the Backup account included, can delete a copy before it expires. AWS Backup restore testing restores a recent copy on a schedule and checks it, so we know a backup works before we need it. Deletion protection is on, and a final snapshot is taken before any delete (Not built yet; today both are off).
 
-High availability. In us-east-1 the cluster runs a writer and a reader in different zones; us-west-2 keeps at least one reader. When the writer fails, Aurora promotes the reader, usually in under a minute, and RDS Proxy moves the connections (Not built yet). Today there is one instance, so a failure means Aurora builds a new one, typically within ten minutes.
+High availability. In us-east-1 the cluster runs a writer and a reader in different zones, and us-west-2 keeps at least one reader. When the writer fails, Aurora promotes the reader, usually in under a minute, and RDS Proxy moves the connections (Not built yet). Today there is one instance. Aurora rebuilds it in the same zone, typically within ten minutes; if the zone is down, a person has to create one in another.
 
-Disaster recovery. us-west-2 holds the global database's secondary cluster, a copy that trails by seconds and only reads until it is promoted (Not built yet). Aurora never moves the writer to another region by itself. A planned switchover loses nothing; an unplanned failover can lose the last seconds of writes. The failover function in us-west-2 takes us-east-1 out of traffic by setting its traffic dial, the share of new connections the accelerator sends to a region, to 0, then promotes us-west-2 (Built, started by hand). In the target a CloudWatch alarm on us-east-1's health starts it from outside us-east-1, and a person approves until drills show the alarm fires only for real outages (Not built yet). If losing the last seconds of writes is not acceptable, the rds.global_db_rpo setting makes the writer wait while the copy lags too far behind, trading write availability for a known maximum loss.
+Disaster recovery. us-west-2 holds the global database's secondary cluster, a copy that trails by about a second and only reads until it is promoted (Not built yet). Because that copy cannot take writes, us-west-2 waits at traffic dial 0, the share of new connections the accelerator sends there (Not built yet; today both regions are at 100). Aurora never moves the writer to another region by itself. A planned switchover loses nothing; an unplanned failover can lose the last seconds of writes. The failover function in us-west-2 sets the us-east-1 dial to 0, promotes us-west-2, then sets the us-west-2 dial to 100 (Built, started by hand). In the target a CloudWatch alarm on us-east-1's health starts it from outside us-east-1. A person approves until drills show the alarm fires only for real outages (Not built yet). If losing the last seconds of writes is not acceptable, the rds.global_db_rpo setting makes the writer wait while the copy lags too far behind. That trades write availability for a known maximum loss.
 
-| What fails | What takes over | Data lost (recovery point, RPO) | Back in (recovery time, RTO) |
+| What fails | What takes over | Data lost (recovery point objective, RPO) | Back in (recovery time objective, RTO) |
 | --- | --- | --- | --- |
 | The writer, or its zone | The reader in another zone | None | Usually under a minute |
 | The us-east-1 region | The us-west-2 copy, promoted | The last seconds of writes | Minutes after the failover starts |
@@ -205,49 +213,59 @@ Disaster recovery. us-west-2 holds the global database's secondary cluster, a co
 
 Where the design is weakest:
 
-Traffic moves by itself, the database does not. The accelerator sends users to us-west-2 as soon as the us-east-1 ALB looks unhealthy, even with the us-west-2 traffic dial at 0, and writes fail there until the copy is promoted.
+Traffic moves by itself, the database does not. The accelerator sends users to us-west-2 as soon as the us-east-1 ALB looks unhealthy, whatever the dial says, and writes fail there until the copy is promoted.
 
-The accelerator counts an ALB healthy only when every target group behind it has a healthy target. Today the public ALB carries one target group nothing fills, so both regions look unhealthy and failover cannot work. When nothing is healthy, the accelerator sends traffic to a random endpoint in the nearest region, a dead one included.
+The accelerator counts an ALB healthy only when every target group behind it has a healthy target. Today the public ALB carries a target group that nothing fills, so both regions look unhealthy and failover cannot work. With nothing healthy, the accelerator sends each user to a random endpoint in the nearest region, a dead one included.
 
-During a failover Aurora tries to stop writes in the old region but cannot promise it, which is why the function takes us-east-1 out of traffic before it promotes.
+During a failover Aurora tries to stop writes in the old region but cannot promise it. That is why the function takes us-east-1 out of traffic first.
+
+Terraform sets the dials on every apply of the edge stacks, so after a failover the next apply sends users back to the failed region.
 
 A bad change reaches every copy within seconds. Only the backups undo it.
 
 ## Improvements on today's build
 
-Every item is Not built yet. They are in the order we would do them: first what makes today's two regions work, then what makes them fit for sensitive data, then the move into the organization.
+Every item is Not built yet. They are in the order we would do them: first what makes today's two regions work, then what makes them safe for sensitive data and steady under load, then the move into the organization.
 
-Edge target group: the public ALB carries a target group nothing fills, so the accelerator sees both regions as unhealthy and cannot fail over. Fill it or remove it.
+Edge target group. The public ALB carries a target group for an ingress proxy, Traefik, which is kept out of the rollout. Nothing fills it, so the accelerator sees both regions as unhealthy. Fill it or remove it.
 
-NAT gateways: one serves all three zones, and losing its zone cuts every node off the internet and off ECR. One per zone.
+Second region rollout. The us-west-2 services need a database stack that is kept out of the rollout, and both regions create the load-test service's DNS record. A fresh us-west-2 apply stops at either one.
 
-Database: one db.t4g.medium, one day of backups, no deletion protection, no final snapshot, the AWS managed key. Serverless v2, a reader in a second zone, 35 days of backups, deletion protection, a final snapshot and a customer managed key; then the global database with its us-west-2 copy.
+Second region traffic. us-west-2 at dial 0 until a failover, because it has no database it can write to.
 
-Database access: RDS Proxy accepts the whole VPC on 5432. Only the API pods.
+Database. Serverless v2, a reader in a second zone, 35 days of backups, deletion protection, a final snapshot and a customer managed key. Then the global database with its us-west-2 copy.
 
-Failover trigger: the failover function is started by hand. An alarm outside us-east-1 starts it, with a person approving until drills prove the alarm.
+Failover. An alarm outside us-east-1 starts the function and a person approves. Terraform leaves the dials alone once they exist.
 
-Address ranges: both regions use 10.144.0.0/16, so they can never be joined privately. A range per VPC from IPAM; for us-west-2 that means rebuilding its VPC.
+NAT gateways. One per zone.
 
-VPC endpoints: only S3 has one. Interface endpoints for ECR, STS, Secrets Manager, CloudWatch Logs and Systems Manager.
+Address ranges. One per VPC from IPAM. For us-west-2 that means rebuilding its VPC.
 
-Public exposure: the bastion has a public IP address outside the public subnets, the cluster API has a public endpoint, and Argo CD sits on an internet-facing load balancer with its built-in admin login. Bastion and Argo CD on private addresses behind Session Manager and the company sign-in, a private cluster API, and VPC Block Public Access.
+Security groups. RDS Proxy admits only the API pods, and the system nodes only what the cluster needs.
 
-Web bucket: CloudFront reads it through the public website endpoint, guarded by a secret header, and CloudFront access logs are off. Origin access control and access logs on.
+Database password. Out of the Terraform state.
 
-Controllers: Karpenter and the other controllers run on Spot. On-Demand Graviton for the system node group.
+Internal names. A private DNS zone for the database names.
 
-Scaling: KEDA is in the code and kept out of the rollout. On in Prod, scaling the API on requests.
+VPC endpoints. ECR, STS, Secrets Manager, CloudWatch Logs and Systems Manager.
 
-Release path: a person commits every image tag into of-helm, and of-launch's cluster deploy does not work against today's charts. of-launch fixed as described above and made the way to deploy, with values per environment and region in of-helm.
+Public exposure. The bastion and Argo CD on private addresses, behind Session Manager and the company sign-in. A private cluster API, an ALB that admits only the accelerator, and VPC Block Public Access.
 
-Pipeline gates: scans block nothing and master needs no review. Required reviews and checks, with SBOM, provenance and image signing on.
+Web bucket. Origin access control, CloudFront access logs, and the two security headers Lambda@Edge leaves out today, Content-Security-Policy and X-Frame-Options.
 
-Cluster hardening: the cluster code turns on no control plane logs and no customer managed key for Kubernetes Secrets, and the developers' role does not require MFA. Control plane logging, envelope encryption for Secrets, and MFA on the role until Identity Center replaces it.
+Controllers. A tainted On-Demand Graviton node group for the controllers.
 
-Terraform state: the backend has no lock, so two applies of the same stack can overlap. use_lockfile on the S3 backend.
+Scaling. KEDA on in Prod.
 
-Then the organization: Control Tower creates the landing zone and the accounts, Identity Center replaces the IAM users and the developer group, and each stack moves to its account. The registry, the parent DNS zone and the Terraform state go to Shared Services; the backup bucket goes to Backup; network, cluster, database and edge go to Dev, Staging and Prod, with both production regions inside Prod.
+Release path. of-launch fixed and made the way to deploy, with values per environment and region in of-helm. Terraform stops rewriting the release-please version file, which would reset the version to 0.1.0 on the first apply after a release. ECR keeps release tags when it cleans up; today it keeps only the newest images of each architecture, releases included.
+
+Pipeline gates. Required reviews and green checks before a merge; SBOM, provenance and image signing on.
+
+Terraform pipeline. A real approval with required reviewers, an apply of the reviewed plan, and state locking on the S3 backend, so two applies of one stack cannot overlap.
+
+Cluster hardening. Control plane logging, a customer managed key for Kubernetes Secrets, and multi-factor authentication (MFA) on the developers' role until Identity Center replaces it. That role and the chart pipeline's role have edit rights only in a namespace named of, where nothing runs; they move to the real namespaces.
+
+Then the organization. Control Tower creates the landing zone and the accounts, and Identity Center replaces the IAM users and the developer group. Each stack moves to its account: the registry, the parent DNS zone and the Terraform state to Shared Services; the backup bucket to Backup; network, cluster, database and edge to Dev, Staging and Prod, with both production regions inside Prod.
 
 ## Glossary
 
@@ -256,17 +274,18 @@ Abbreviations and names used in this document, with what each means here.
 | Term | Stands for and what it is here |
 | --- | --- |
 | Access entry | EKS's list of which IAM roles may call the cluster API and with which Kubernetes rights |
-| ACL | Access control list; a network ACL filters a subnet, a web ACL is a WAF rule set, S3 ACLs are switched off by "bucket owner enforced" |
-| Add-on | A cluster component EKS installs and upgrades: `vpc-cni` (pod networking), `coredns` (cluster DNS), `kube-proxy` (service routing), pod-identity-agent |
-| ALB | Application Load Balancer; the public ALB behind the accelerator, the internal ALB, and the Ingress ALB the load balancer controller builds |
-| AMI | Amazon Machine Image, the disk image a node boots from; `al2023@latest` is the newest Amazon Linux 2023 |
+| ACL | Access control list; a network ACL filters a subnet's traffic by address range and port |
+| Add-on | A cluster component EKS installs and upgrades, such as pod networking, cluster DNS and the Pod Identity agent |
+| ALB | Application Load Balancer; the public ALB behind the accelerator, and the internal ALB in the private subnets |
+| AMI | Amazon Machine Image, the disk image a node boots from |
 | Anonymous IP list | AWS WAF managed rule group that marks requests from Tor, VPN services and hosting providers |
 | API | Application programming interface; here the Flask REST API the web app calls |
 | Argo CD | GitOps controller inside the cluster; pulls the of-helm repository and applies what it finds |
+| Argo CD Application | Argo CD's record of which chart and values go to which cluster |
 | AWS | Amazon Web Services |
-| AZ | Availability Zone, one data-center group in a region; Multi-AZ means copies in two or more |
+| AZ | Availability Zone, separate data centers within one region; Multi-AZ means copies in two or more |
 | Baseline | The Terraform module applied to every new account: default VPC removed, encryption defaults, OIDC provider, deploy role, budget, tags |
-| Bastion | The one EC2 host in the VPC an operator reaches through SSM Session Manager to get at private resources |
+| Bastion | The one server in the VPC an operator reaches through Session Manager to get at private resources |
 | Bot Control | AWS WAF managed rule group for bots; its targeted level checks each request for a token only a real browser running the app gets |
 | BreakGlass | The time-boxed, paged permission set for writes in Staging, Prod and Backup |
 | Burp Suite | Proxy tool that catches, edits and replays web requests, used for security testing and for attacks |
@@ -275,87 +294,90 @@ Abbreviations and names used in this document, with what each means here.
 | CI | Continuous integration; the GitHub Actions workflows that test, build, push images and run Terraform |
 | CLI | Command-line interface; here the `aws` command |
 | CloudFront | AWS content delivery network; serves the web app from S3 with WAF in front |
-| CMK | Customer managed key, a KMS key the account creates and controls, unlike an AWS-managed key |
+| CloudWatch | AWS monitoring service: logs, metrics and alarms |
+| CMK | Customer managed key, a KMS key the account creates and controls, unlike an AWS managed key |
 | CNI | Container Network Interface; the VPC CNI gives every pod an IP address from the VPC and enforces network policies |
 | CodeQL, Snyk, zizmor | Scanners in CI: code analysis, known vulnerabilities in code and dependencies, mistakes in GitHub Actions workflows |
 | Control Tower | AWS service that creates and governs the organization: landing zone, OUs, account vending, organization policies |
 | CPU | Processor; Karpenter NodePools cap the total CPU they may launch |
-| CSI | Container Storage Interface; the EBS CSI driver gives pods volumes, the Secrets Store CSI driver mounts Secrets Manager values |
+| CSI | Container Storage Interface; the Secrets Store CSI driver mounts Secrets Manager values into pods as files |
+| Declarative policy | Organization policy that sets a service's configuration, such as IMDSv2 or VPC Block Public Access, in every account |
 | Delegated administrator | The member account that runs an organization-wide service (GuardDuty, Security Hub, Identity Center) instead of Management |
 | DNS | Domain Name System; Route 53 holds the zones |
 | DNS Firewall | Route 53 Resolver DNS Firewall; blocks DNS lookups of listed domains, such as known malware and command-and-control domains |
 | DR | Disaster recovery; the second region and the Backup account |
-| EBS | Elastic Block Store, the node and pod disks; gp3 is its general-purpose volume type |
-| EC2 | Elastic Compute Cloud, the virtual machines nodes run on |
 | ECR | Elastic Container Registry; holds the images |
+| Edge location | One of AWS's sites close to users, where CloudFront and Global Accelerator take traffic in |
 | EKS | Elastic Kubernetes Service, the managed Kubernetes cluster |
 | ETL, ELT | Extract, transform, load, or extract, load, transform: a pipeline that copies data from one store to another, cleaning or reshaping it before or after the copy |
-| external-dns | Controller that writes Route 53 records for Kubernetes Ingresses and Services |
+| external-dns | Controller that writes Route 53 records for Kubernetes services |
 | FIDO2 | Open standard for hardware security keys used as the second sign-in factor |
-| Flow Logs | VPC records of connections; today rejected traffic only |
+| Flow Logs | VPC records of connections; today rejected connections only |
 | GitOps | Cluster state declared in a Git repository and pulled by a controller, not pushed by a pipeline |
-| Global Accelerator | Static anycast IP addresses in front of each region's public ALB, with health-based failover between regions |
-| Graviton | AWS's ARM CPUs (arm64); x86 and amd64 mean Intel and AMD |
+| Global Accelerator | Two static anycast IP addresses in front of each region's public ALB, with health-based failover between regions |
+| Graviton | AWS's Arm processors (arm64); x86 means Intel and AMD |
 | GuardDuty, Security Hub, Inspector, Macie, Config, Access Analyzer | AWS detective services: threat findings, finding aggregation and checks, vulnerability scans, sensitive-data discovery, configuration history, unintended-access analysis |
 | Helm, chart | Kubernetes package manager; a chart is a templated set of manifests driven by a values file |
 | HPA | Horizontal Pod Autoscaler; adds or removes pods on CPU or memory from metrics-server |
-| HTTP, HTTPS | Hypertext Transfer Protocol, and its form encrypted with TLS |
 | IAM | Identity and Access Management: roles, policies and, today, users and groups |
-| ID | Identifier, such as a user's number in the database |
 | Identity Center | IAM Identity Center, formerly AWS SSO; one sign-in through the company directory, then a permission set per account |
-| IMDSv2 | Instance Metadata Service version 2, the token-protected way a node reads its metadata and credentials; the hop limit decides whether pods can reach it |
+| IMDSv2 | Instance Metadata Service version 2, the token-protected way a node reads its metadata and credentials |
 | Internet gateway | The VPC's connection to the internet; only the public subnets route to it |
 | IP address | Internet Protocol address; a public one can be reached from the internet |
 | IPAM | Amazon VPC IP Address Manager; hands out address ranges from one pool so no two VPCs overlap |
-| Karpenter | Node autoscaler; launches EC2 instances for pending pods and removes them when empty |
-| KEDA | Kubernetes Event-driven Autoscaling; scales pods on external metrics such as ALB requests per minute |
+| Karpenter | Node autoscaler; launches nodes for pods that cannot be placed and removes empty or underused ones |
+| KEDA | Kubernetes Event-driven Autoscaling; scales pods on outside metrics such as ALB requests per pod |
 | KMS | Key Management Service, the encryption keys |
+| kubectl | The Kubernetes command-line tool |
+| Lambda | AWS Lambda, functions that run without a server we manage |
+| Lambda@Edge | Code CloudFront runs at its edge locations; here it guards the web bucket and adds security headers |
 | Landing zone | Control Tower's starting setup: the organization, the Security OU accounts, logging and the organization policies |
 | LimitRange, ResourceQuota | Kubernetes objects: a default size for containers that set none, and a ceiling for a whole namespace |
 | Logically air-gapped vault | AWS Backup vault that is always locked in compliance mode; nobody can delete a copy before it expires |
-| Managed node group | EKS-managed set of EC2 nodes; here the system nodes the controllers run on |
+| Managed node group | EKS-managed set of nodes; here the system nodes the controllers run on |
 | metrics-server | Collects pod and node CPU and memory for the HPAs and `kubectl top` |
 | MFA | Multi-factor authentication |
-| NAT gateway | Lets private subnets reach the internet outbound while staying unreachable inbound |
+| NAT gateway | Network address translation gateway; lets private subnets reach the internet outbound while staying unreachable inbound |
 | Network policy | Kubernetes rule for which pods may talk to which |
 | NodePool | Karpenter object: the instance types, capacity types, architecture, limits and taint a set of nodes may use |
 | OAC | Origin access control; lets only the CloudFront distribution read the S3 bucket |
 | Object Lock | S3 setting that blocks deleting or changing objects for a retention period |
 | OIDC | OpenID Connect; GitHub Actions gets AWS credentials with a signed token instead of stored keys |
-| On-Demand, Spot | EC2 pricing: On-Demand is full price and stays; Spot is spare capacity at a discount that AWS reclaims with two minutes' warning |
+| On-Demand, Spot | Server pricing: On-Demand is full price and stays; Spot is spare capacity at a discount that AWS takes back with two minutes' warning |
 | OU | Organizational unit, a folder of accounts in an AWS Organization that policies attach to |
 | PCI, SOC 2, HIPAA | Compliance regimes: card payments, service-organization controls, US health data |
 | Permission set | Identity Center's role template; becomes a role in each account it is assigned to |
-| Pod Identity | EKS Pod Identity; binds a Kubernetes service account to an IAM role through the pod-identity agent, no OIDC trust per role |
-| PodDisruptionBudget | How many pods of a Deployment may be down while nodes drain; here all but one stay up |
+| Pod Identity | EKS Pod Identity; binds a Kubernetes service account to an IAM role through the Pod Identity agent |
+| PodDisruptionBudget | How many pods of a service may be down while nodes drain; here all but one stay up |
 | PriorityClass | Kubernetes object that decides which pods keep running when capacity is short |
 | RDS Proxy | Managed connection pool between the application and the database; keeps connections open during a failover |
 | RDS, Aurora | Relational Database Service; Aurora is its PostgreSQL-compatible engine, Serverless v2 scales its capacity, a global database replicates to another region |
 | release-please | Release tool in GitHub Actions that opens release pull requests and tags semantic versions |
 | Resource Access Manager | AWS service that shares resources such as a Transit Gateway across accounts |
-| Resource control policy | Organization policy on the resource side (S3, KMS, Secrets Manager, SQS, STS) limiting who may call it |
+| Resource control policy | Organization policy on the resource side (buckets, keys, secrets, queues, role credentials) limiting who may call it |
 | REST | Representational state transfer; the request style of the Flask API |
 | Route 53 | AWS DNS; the hosted zones and their records |
 | RPO, RTO | Recovery point objective, the data a failover may lose; recovery time objective, how long until service is back |
 | S3 | Simple Storage Service, the buckets |
+| Savings Plans | AWS discount for committing to a steady amount of compute per hour |
 | SBOM | Software bill of materials, the list of packages in an image |
 | Secrets Manager | AWS secret store; the Secrets Store CSI driver mounts its values into pods |
-| Security group | Stateful firewall on an instance, ALB or pod network interface |
+| Security group | Stateful firewall on a server, load balancer or pod network interface |
 | Service control policy | Organization-wide rule that caps what anyone in an account may do, inherited down the tree, never applied to Management |
-| SHA | The hash git gives each commit; it names each image |
 | Shield Standard | AWS protection against common network floods, included at no extra cost on CloudFront and Global Accelerator |
 | SIEM | Security information and event management, the tool that collects and correlates security logs |
 | SOC | Security operations center |
 | SQL | Structured Query Language; SQL injection smuggles database commands into a request |
-| SSM | Systems Manager; Session Manager opens a shell on the bastion with no SSH port open |
+| SSM | Systems Manager; Session Manager opens a shell on the bastion with no inbound port open |
 | SSO | Single sign-on |
-| Stack, module, rollout | Terraform layout: a stack is one root with its own state, a module a building block under `modules/`, `rollout` the apply order |
+| Stack, module, rollout | Terraform layout: a stack is one root with its own state, a module a building block under `modules/`, the rollout the order in which a folder's stacks are applied |
 | STS | Security Token Service; issues the short-lived credentials behind every assumed role |
-| Taint | Node mark that keeps pods away unless they tolerate it; the Graviton pool is opt-in through its taint |
-| Target group | The set of targets, here pod IPs, an ALB listener rule sends traffic to |
-| TLS | Transport Layer Security, the HTTPS encryption; the TLS 1.2 and 1.3 policies name the allowed versions |
+| Taint | Node mark that keeps away pods that do not tolerate it; the Graviton pool is opt-in through its taint |
+| Target group | The set of targets, here pod IP addresses, an ALB rule sends traffic to |
+| TLS | Transport Layer Security, the encryption behind https addresses |
+| Traefik | Ingress proxy; its stack is kept out of the rollout |
 | Traffic dial | Global Accelerator's share of new connections sent to one region |
-| Transit Gateway | Hub that routes between VPCs and on-premises; not used, nothing needs VPC-to-VPC traffic |
+| Transit Gateway | Hub that routes between VPCs; not used, nothing needs VPC-to-VPC traffic yet |
 | VPC | Virtual Private Cloud, the private network with its subnets |
 | VPC Block Public Access | VPC setting that blocks internet traffic to every subnet not excluded; here only the public subnets are excluded |
 | VPC endpoint | Private path from the VPC to an AWS service without the internet; an interface endpoint is a network interface in the VPC, a gateway endpoint a route-table entry |
