@@ -181,7 +181,9 @@ Registry. One ECR registry sits in Shared Services in us-east-1. It scans each i
 
 Supply chain. The risk is a vulnerable dependency or a tampered image reaching Prod. A pull request merges only with a review and green tests and scans. Every build keeps its software bill of materials (SBOM), the list of packages in the image, and its provenance record, how and from what it was built. Amazon Inspector rescans stored images when a new vulnerability is published. Images are signed at build, and an admission policy checks the signature before a pod may start.
 
-Infrastructure. Infrastructure changes have their own pipeline: it plans with a read-only role and applies with an admin role. Every pull request gets a plan, a reviewer approves, and the merge applies that plan, in each account.
+Infrastructure. All of the infrastructure is code, and the code is Terraform. Infrastructure changes have their own pipeline: it plans with a read-only role and applies with an admin role. Every pull request gets a plan, a reviewer approves, and the merge applies that plan, in each account. Today GitHub Actions runs that pipeline. The target is a tool made for running Terraform, and the budget picks which one: Terraform Cloud or Spacelift, paid services that run every plan and apply on their side and keep the run history, the approvals and, if we want, the state; or Atlantis, free, hosted by us on a runner in the VPC, with the state staying in S3. All three do the same job here: a plan on every pull request, an apply on merge, one run per stack at a time. The tool we run also takes a webhook from the failover function and does the regional swap as a Terraform run; the Database section has the reason.
+
+Modules. Today the modules sit in this repository under modules/, each version as its own folder, and a stack picks one by path. There are two ways to grow this. Option A: each module gets its own repository and is versioned there with git tags, and a stack points at the repository and a tag. Option B, with fewer repositories: one repository holds every module, with a git tag per module version, and a stack points at that tag.
 
 ## Database
 
@@ -216,6 +218,10 @@ Backups. Aurora's continuous backup restores the database to any point in the re
 High availability. In us-east-1 the cluster runs a writer and a reader in different zones, and us-west-2 keeps at least one reader. When the writer fails, Aurora promotes the reader, usually in under a minute, and RDS Proxy moves the connections.
 
 Disaster recovery. us-west-2 holds the global database's secondary cluster, a copy that trails by about a second and only reads until it is promoted. Because that copy cannot take writes, us-west-2 waits at traffic dial 0, the share of new connections the accelerator sends there. Aurora never moves the writer to another region by itself. A planned switchover loses nothing; an unplanned failover can lose the last seconds of writes. The failover function in us-west-2 sets the us-east-1 dial to 0, promotes us-west-2, then sets the us-west-2 dial to 100. The trigger is a CloudWatch alarm in us-west-2 on the accelerator's own health checks: when the accelerator sees no healthy endpoint in us-east-1 for three minutes in a row, EventBridge, the AWS event bus, hands the alarm to the function. The alarm lives in us-west-2 because the accelerator publishes its metrics there, so it still fires when us-east-1 is down. A switch in the function's settings decides what it does on that alarm: report only, or promote. It starts at report only; once drills show the alarm fires only for a real outage, the switch moves to promote and the failover runs by itself. If losing the last seconds of writes is not acceptable, the rds.global_db_rpo setting makes the writer wait while the copy lags too far behind. That trades write availability for a known maximum loss.
+
+Failover and Terraform. Today GitHub Actions runs the infrastructure Terraform, and the failover function does the swap on its own, straight against the AWS API: dial us-east-1 down, promote the database in us-west-2, dial us-west-2 up.
+
+In the future we move the Terraform runs to a tool built for it, Terraform Cloud, Spacelift or a self-hosted Atlantis, depending on the budget, and give it a webhook, a URL that starts a run when it is called. The function then calls that URL instead of the AWS API, with us-west-2 as the new active region, and the run does the same three steps through Terraform. The state changes with the apply, so nothing drifts, and the failover sits in the run history with its plan and its log, like any other change.
 
 | What fails | What takes over | Data lost (recovery point objective, RPO) | Back in (recovery time objective, RTO) |
 | --- | --- | --- | --- |
@@ -380,6 +386,7 @@ Abbreviations and names used in this document, with what each means here.
 | STS | Security Token Service; issues the short-lived credentials behind every assumed role |
 | Taint | Node mark that keeps away pods that do not tolerate it; the Graviton pool is opt-in through its taint |
 | Target group | The set of targets, here pod IP addresses, an ALB rule sends traffic to |
+| Terraform Cloud, Spacelift, Atlantis | Tools that run Terraform from pull requests: Terraform Cloud (now HCP Terraform) and Spacelift are paid services, Atlantis is free and self-hosted; one of them runs the infrastructure pipeline and takes the failover webhook |
 | TLS | Transport Layer Security, the encryption behind https addresses |
 | Traffic dial | Global Accelerator's share of new connections sent to one region |
 | Transit Gateway | Hub that routes between VPCs; not used, nothing needs VPC-to-VPC traffic yet |
@@ -388,3 +395,4 @@ Abbreviations and names used in this document, with what each means here.
 | VPC endpoint | Private path from the VPC to an AWS service without the internet; an interface endpoint is a network interface in the VPC, a gateway endpoint a route-table entry |
 | VPN | Virtual private network |
 | WAF | Web Application Firewall; rule sets on CloudFront and the public ALB |
+| Webhook | A web request one system sends to start work in another; here the failover function's call to the Terraform pipeline tool |
